@@ -1,99 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BQ2A | THE TABLE</title>
+    <title>BQ2A MOBILE ENGINE</title>
     <style>
-        body { margin: 0; background-color: #050505; overflow: hidden; }
-        canvas { width: 100%; height: 100%; display: block; }
-        .info { position: absolute; top: 10px; width: 100%; text-align: center; color: #00f2ff; font-family: monospace; pointer-events: none; }
+        /* قفل الصفحة للجوال */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; touch-action: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+
+        /* واجهة الجوال */
+        .mobile-hud {
+            position: absolute; bottom: 40px; width: 100%;
+            display: flex; justify-content: space-around; pointer-events: none;
+        }
+        .action-btn {
+            width: 70px; height: 70px; background: rgba(0, 242, 255, 0.2);
+            border: 2px solid #00f2ff; border-radius: 50%; color: #00f2ff;
+            font-weight: bold; pointer-events: auto; display: flex;
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .status-bar {
+            position: absolute; top: 20px; left: 20px; color: #00f2ff;
+            font-family: 'Courier New', monospace; font-size: 12px; pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="info">PROJECT BQ2A: 3D TABLE RENDER</div>
+    <div class="status-bar">SYSTEM: BQ2A ONLINE<br>MODE: MOBILE_TOUCH</div>
+
+    <div class="mobile-hud">
+        <div class="action-btn" id="btn-zoom">ZOOM</div>
+        <div class="action-btn" id="btn-spin">SPIN</div>
+    </div>
+
     <canvas id="application-canvas"></canvas>
 
     <script src="https://code.playcanvas.com/playcanvas-stable.min.js"></script>
 
     <script>
         const canvas = document.getElementById('application-canvas');
-        const app = new pc.Application(canvas, {
-            mouse: new pc.Mouse(canvas),
-            touch: new pc.TouchDevice(canvas)
-        });
-
+        const app = new pc.Application(canvas, { touch: new pc.TouchDevice(canvas) });
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
         app.start();
 
-        // إعداد الكاميرا بزاوية رؤية علوية (Isometric)
-        const camera = new pc.Entity('camera');
-        camera.addComponent('camera', { clearColor: new pc.Color(0.1, 0.1, 0.1) });
-        app.root.addChild(camera);
-        camera.setPosition(4, 4, 4);
-        camera.lookAt(0, 0, 0);
-
-        // إضاءة قوية لإظهار الظلال
-        const light = new pc.Entity('light');
-        light.addComponent('light', {
-            type: 'directional',
-            color: new pc.Color(1, 1, 1),
-            castShadows: true,
-            shadowBias: 0.05,
-            normalOffsetBias: 0.05
-        });
-        light.setEulerAngles(45, 45, 0);
+        // إضاءة سينمائية
+        const light = new pc.Entity();
+        light.addComponent('light', { type: 'omni', range: 20, color: new pc.Color(0, 1, 1) });
         app.root.addChild(light);
+        light.setPosition(2, 5, 5);
 
-        // --- بناء الطاولة ---
-        
-        // 1. سطح الطاولة
-        const tableTop = new pc.Entity('TableTop');
-        tableTop.addComponent('render', { type: 'box' });
-        tableTop.setLocalScale(4, 0.2, 2.5); // عريضة ومسطحة
-        tableTop.setPosition(0, 1, 0);
-        
-        const woodMaterial = new pc.StandardMaterial();
-        woodMaterial.diffuse = new pc.Color(0.4, 0.2, 0.1); // لون خشبي
-        woodMaterial.shininess = 30;
-        woodMaterial.update();
-        tableTop.render.meshInstances[0].material = woodMaterial;
-        app.root.addChild(tableTop);
+        const camera = new pc.Entity();
+        camera.addComponent('camera', { clearColor: new pc.Color(0, 0, 0.05) });
+        app.root.addChild(camera);
+        camera.setPosition(0, 0, 5);
 
-        // 2. دالة لإنشاء أرجل الطاولة
-        function createLeg(x, z) {
-            const leg = new pc.Entity('Leg');
-            leg.addComponent('render', { type: 'cylinder' });
-            leg.setLocalScale(0.15, 1, 0.15);
-            leg.setPosition(x, 0.5, z);
-            leg.render.meshInstances[0].material = woodMaterial;
-            app.root.addChild(leg);
-        }
+        let mainObject = null;
+        const url = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb';
 
-        // وضع الأرجل في الزوايا الأربعة
-        createLeg(1.8, 1.1);
-        createLeg(-1.8, 1.1);
-        createLeg(1.8, -1.1);
-        createLeg(-1.8, -1.1);
+        app.assets.loadFromUrl(url, "container", function (err, asset) {
+            mainObject = asset.resource.instantiateRenderEntity();
+            app.root.addChild(mainObject);
 
-        // 3. إضافة أرضية لاستقبال الظلال
-        const floor = new pc.Entity('Floor');
-        floor.addComponent('render', { type: 'plane' });
-        floor.setLocalScale(10, 1, 10);
-        app.root.addChild(floor);
-
-        // تحريك الكاميرا باللمس لرؤية الطاولة من كل الزوايا
-        if (app.touch) {
+            // تحكم اللمس الحقيقي
             app.touch.on(pc.EVENT_TOUCHMOVE, (e) => {
-                app.root.findByName('TableTop').rotate(0, e.touches[0].dx, 0);
+                const touch = e.touches[0];
+                mainObject.rotate(touch.dy * 0.4, touch.dx * 0.4, 0);
             });
-        }
+        });
 
-        app.on('update', dt => {
-            // دوران خفيف للمشهد بالكامل
-            // app.root.rotate(0, 10 * dt, 0);
+        // ميكانيكا الأزرار للجوال
+        document.getElementById('btn-spin').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if(mainObject) {
+                const rotateInterval = setInterval(() => {
+                    mainObject.rotate(0, 5, 0);
+                }, 16);
+                setTimeout(() => clearInterval(rotateInterval), 1000);
+            }
+        });
+
+        document.getElementById('btn-zoom').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const currentZ = camera.getPosition().z;
+            camera.setPosition(0, 0, currentZ === 5 ? 3 : 5);
         });
 
         window.addEventListener('resize', () => app.resizeCanvas());
