@@ -3,42 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BQ2A | INTERACTIVE MODE</title>
+    <title>BQ2A | PLAY MODE</title>
     <style>
-        body { margin: 0; background-color: #020205; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; background: radial-gradient(circle, #050a18 0%, #000 100%); overflow: hidden; }
         canvas { width: 100%; height: 100%; display: block; }
-        
-        /* واجهة HUD متطورة */
-        .ui-panel {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; background: rgba(0, 242, 255, 0.1);
-            padding: 15px 25px; border-radius: 50px; border: 1px solid rgba(0, 242, 255, 0.3);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-        }
-
-        .btn-ui {
-            background: none; border: 1px solid #00f2ff; color: #00f2ff;
-            padding: 8px 15px; border-radius: 20px; font-size: 10px;
-            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
-        }
-
-        .top-info {
+        .score-board {
             position: absolute; top: 20px; width: 100%; text-align: center;
-            color: #00f2ff; text-shadow: 0 0 15px #00f2ff; pointer-events: none;
+            color: #00f2ff; font-family: 'Courier New', monospace; pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="top-info">
-        <h2 style="margin:0; letter-spacing: 5px;">BQ2A PROTOCOL</h2>
-        <p style="font-size: 0.6rem; opacity: 0.6;">NEURAL LINK ESTABLISHED</p>
-    </div>
-
-    <div class="ui-panel">
-        <button class="btn-ui" onclick="changeColor('#00f2ff')">Cyan</button>
-        <button class="btn-ui" onclick="changeColor('#ff0055')">Neon</button>
-        <button class="btn-ui" onclick="resetRotation()">Reset</button>
+    <div class="score-board">
+        <h1 id="status">BQ2A: ACTIVE</h1>
+        <p>المس الخوذة لزيادة السرعة!</p>
     </div>
 
     <canvas id="application-canvas"></canvas>
@@ -47,53 +26,52 @@
 
     <script>
         const canvas = document.getElementById('application-canvas');
-        const app = new pc.Application(canvas, {
-            mouse: new pc.Mouse(canvas),
-            touch: new pc.TouchDevice(canvas)
-        });
-
+        const app = new pc.Application(canvas, { touch: new pc.TouchDevice(canvas) });
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
         app.start();
 
-        app.scene.gammaCorrection = pc.GAMMA_SRGB;
-        app.scene.toneMapping = pc.TONEMAP_ACES;
-
-        const camera = new pc.Entity('camera');
-        camera.addComponent('camera', { clearColor: new pc.Color(0, 0, 0.05) });
+        const camera = new pc.Entity();
+        camera.addComponent('camera', { clearColor: new pc.Color(0, 0, 0) });
         app.root.addChild(camera);
-        camera.setPosition(0, 0, 3);
+        camera.setPosition(0, 0, 5);
 
-        const light = new pc.Entity('light');
-        light.addComponent('light', { type: 'omni', color: new pc.Color(1, 1, 1), range: 10, intensity: 1.5 });
+        const light = new pc.Entity();
+        light.addComponent('light', { type: 'omni', range: 20 });
         app.root.addChild(light);
-        light.setPosition(2, 2, 2);
+        light.setPosition(2, 2, 5);
 
-        let helmetEntity = null;
+        let entity = null;
+        let velocityX = 0.05;
+        let velocityY = 0.05;
 
         const url = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb';
         
         app.assets.loadFromUrl(url, "container", function (err, asset) {
-            helmetEntity = asset.resource.instantiateRenderEntity();
-            app.root.addChild(helmetEntity);
+            entity = asset.resource.instantiateRenderEntity();
+            app.root.addChild(entity);
 
-            if (app.touch) {
-                app.touch.on(pc.EVENT_TOUCHMOVE, (e) => {
-                    helmetEntity.rotate(e.touches[0].dy * 0.5, e.touches[0].dx * 0.5, 0);
-                });
-            }
+            // عند لمس الشاشة، نعطي دفعة قوية للخوذة
+            app.touch.on(pc.EVENT_TOUCHSTART, () => {
+                velocityX = (Math.random() - 0.5) * 0.2;
+                velocityY = (Math.random() - 0.5) * 0.2;
+                document.getElementById('status').innerText = "BOOST ACTIVATED!";
+                setTimeout(() => document.getElementById('status').innerText = "BQ2A: ACTIVE", 1000);
+            });
         });
 
-        // وظائف الأزرار
-        function changeColor(hex) {
-            const color = new pc.Color().fromString(hex);
-            light.light.color = color;
-            document.querySelector('.top-info').style.color = hex;
-        }
+        app.on('update', dt => {
+            if (entity) {
+                // تحريك الخوذة بناءً على السرعة
+                const pos = entity.getPosition();
+                entity.setPosition(pos.x + velocityX, pos.y + velocityY, 0);
+                entity.rotate(1, 2, 0);
 
-        function resetRotation() {
-            if(helmetEntity) helmetEntity.setEulerAngles(0, 0, 0);
-        }
+                // ارتداد من حواف الشاشة (حدود وهمية)
+                if (pos.x > 2 || pos.x < -2) velocityX *= -1;
+                if (pos.y > 3 || pos.y < -3) velocityY *= -1;
+            }
+        });
 
         window.addEventListener('resize', () => app.resizeCanvas());
     </script>
