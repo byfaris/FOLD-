@@ -1,83 +1,82 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>BQ2A | TAZO ENGINE</title>
+    <title>BQ2A | TAZO SHOWDOWN</title>
     <style>
-        body { margin: 0; background: radial-gradient(circle, #222, #000); overflow: hidden; touch-action: none; }
-        #label { position: absolute; top: 20px; width: 100%; text-align: center; color: #00f2ff; font-family: sans-serif; pointer-events: none; text-shadow: 0 0 10px #00f2ff; }
+        body { margin: 0; background: #1a1a1a; overflow: hidden; font-family: sans-serif; touch-action: none; }
+        #game-ui { position: absolute; top: 20px; width: 100%; text-align: center; color: #fff; pointer-events: none; }
+        .stats { display: flex; justify-content: space-around; font-weight: bold; color: #00f2ff; }
+        canvas { display: block; }
     </style>
 </head>
 <body>
-    <div id="label">مشروع BQ2A<br>اسحب التيزو لتدويره</div>
-    
+
+    <div id="game-ui">
+        <div class="stats">
+            <div>بطاقاتي: <span id="my-stock">10</span></div>
+            <div>بطاقات الخصم: <span id="enemy-stock">10</span></div>
+        </div>
+        <h2 id="turn-info">دور الخصم: يضع البطاقة الآن...</h2>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // 1. إعداد المشهد والكاميرا
+        // 1. الإعدادات الأساسية
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // 2. إنشاء "التيزو" (أسطوانة نحيفة جداً)
-        const geometry = new THREE.CylinderGeometry(1.2, 1.2, 0.08, 64);
-        const material = new THREE.MeshStandardMaterial({ 
-            color: 0x00f2ff, 
-            metalness: 0.7, 
-            roughness: 0.2 
-        });
-        const tazo = new THREE.Mesh(geometry, material);
-        tazo.rotation.x = Math.PI / 2; // جعل وجه التيزو أمام الكاميرا
-        scene.add(tazo);
+        // 2. الطاولة الاحترافية
+        const tableGeo = new THREE.BoxGeometry(5, 0.2, 7);
+        const tableMat = new THREE.MeshStandardMaterial({ color: 0x442211 }); // لون خشبي دافئ
+        const table = new THREE.Mesh(tableGeo, tableMat);
+        scene.add(table);
 
-        // 3. الإضاءة
+        // 3. دالة إنشاء "بطاقة تيزو" (لها وجهين)
+        function createTazo(x, z, isFlipped = true) {
+            const group = new THREE.Group();
+            // جسم البطاقة (أسطوانة نحيفة جداً)
+            const geo = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 32);
+            
+            // مادتين مختلفتين (وجه البطاقة والشعار الخلفي)
+            const sideMat = new THREE.MeshStandardMaterial({ color: 0xffffff }); // الوجه (البطل)
+            const backMat = new THREE.MeshStandardMaterial({ color: 0x333333 }); // الخلفية (الشعار)
+            
+            const mesh = new THREE.Mesh(geo, [sideMat, sideMat, backMat]);
+            group.add(mesh);
+            
+            group.position.set(x, 0.15, z);
+            
+            // إذا كانت مقلوبة (الشعار للأعلى)
+            if(isFlipped) group.rotation.x = Math.PI; 
+            
+            scene.add(group);
+            return { mesh: group, flipped: isFlipped };
+        }
+
+        // إضاءة لإظهار التفاصيل
         const light = new THREE.PointLight(0xffffff, 1, 100);
-        light.position.set(5, 5, 5);
+        light.position.set(2, 5, 2);
         scene.add(light);
         scene.add(new THREE.AmbientLight(0x404040));
 
-        camera.position.z = 3;
+        camera.position.set(0, 5, 6);
+        camera.lookAt(0, 0, 0);
 
-        // 4. منطق التحكم باللمس (القصور الذاتي)
-        let isDragging = false;
-        let rotationSpeed = 0.02;
-        let lastTouchX = 0;
+        // وضع أول بطاقة للخصم (مقلوبة على وجه الشعار)
+        let currentTarget = createTazo(0, 0, true);
 
-        window.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            lastTouchX = e.touches[0].clientX;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (isDragging) {
-                const deltaX = e.touches[0].clientX - lastTouchX;
-                rotationSpeed = deltaX * 0.01;
-                tazo.rotation.y += rotationSpeed;
-                lastTouchX = e.touches[0].clientX;
-            }
-        });
-
-        window.addEventListener('touchend', () => {
-            isDragging = false;
-        });
-
-        // 5. حلقة التحديث (الأنيميشن)
         function animate() {
             requestAnimationFrame(animate);
-            
-            if (!isDragging) {
-                tazo.rotation.y += rotationSpeed;
-                rotationSpeed *= 0.98; // احتكاك تدريجي للتوقف
-            }
-            
             renderer.render(scene, camera);
         }
         animate();
 
-        // تحديث الحجم عند تدوير الجوال
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
