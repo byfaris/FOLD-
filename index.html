@@ -3,22 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BQ2A | NEXT-GEN MODEL</title>
+    <title>BQ2A | INTERACTIVE MODE</title>
     <style>
-        body { margin: 0; background-color: #000; overflow: hidden; }
+        body { margin: 0; background-color: #020205; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         canvas { width: 100%; height: 100%; display: block; }
-        .hud-top {
-            position: absolute; top: 20px; left: 20px;
-            color: #00f2ff; font-family: 'Courier New', monospace;
-            text-shadow: 0 0 10px #00f2ff; pointer-events: none;
+        
+        /* واجهة HUD متطورة */
+        .ui-panel {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; background: rgba(0, 242, 255, 0.1);
+            padding: 15px 25px; border-radius: 50px; border: 1px solid rgba(0, 242, 255, 0.3);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn-ui {
+            background: none; border: 1px solid #00f2ff; color: #00f2ff;
+            padding: 8px 15px; border-radius: 20px; font-size: 10px;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .top-info {
+            position: absolute; top: 20px; width: 100%; text-align: center;
+            color: #00f2ff; text-shadow: 0 0 15px #00f2ff; pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="hud-top">
-        <h1 style="margin:0; font-size: 1.2rem;">BQ2A ENGINE</h1>
-        <p style="font-size: 0.6rem; letter-spacing: 2px;">LOADING 3D ASSETS...</p>
+    <div class="top-info">
+        <h2 style="margin:0; letter-spacing: 5px;">BQ2A PROTOCOL</h2>
+        <p style="font-size: 0.6rem; opacity: 0.6;">NEURAL LINK ESTABLISHED</p>
+    </div>
+
+    <div class="ui-panel">
+        <button class="btn-ui" onclick="changeColor('#00f2ff')">Cyan</button>
+        <button class="btn-ui" onclick="changeColor('#ff0055')">Neon</button>
+        <button class="btn-ui" onclick="resetRotation()">Reset</button>
     </div>
 
     <canvas id="application-canvas"></canvas>
@@ -36,40 +56,44 @@
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
         app.start();
 
-        // إعداد الإضاءة والبيئة
         app.scene.gammaCorrection = pc.GAMMA_SRGB;
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
         const camera = new pc.Entity('camera');
-        camera.addComponent('camera', { clearColor: new pc.Color(0.01, 0.01, 0.01) });
+        camera.addComponent('camera', { clearColor: new pc.Color(0, 0, 0.05) });
         app.root.addChild(camera);
         camera.setPosition(0, 0, 3);
 
         const light = new pc.Entity('light');
-        light.addComponent('light', { type: 'directional', color: new pc.Color(1, 1, 1), intensity: 2 });
-        light.setEulerAngles(45, 45, 0);
+        light.addComponent('light', { type: 'omni', color: new pc.Color(1, 1, 1), range: 10, intensity: 1.5 });
         app.root.addChild(light);
+        light.setPosition(2, 2, 2);
 
-        // تحميل نموذج 3D حقيقي (مثال لخوذة Sci-Fi بتفاصيل عالية)
+        let helmetEntity = null;
+
         const url = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb';
         
         app.assets.loadFromUrl(url, "container", function (err, asset) {
-            const entity = asset.resource.instantiateRenderEntity();
-            entity.setLocalScale(1, 1, 1);
-            app.root.addChild(entity);
+            helmetEntity = asset.resource.instantiateRenderEntity();
+            app.root.addChild(helmetEntity);
 
-            // التحكم باللمس لتدوير النموذج
             if (app.touch) {
                 app.touch.on(pc.EVENT_TOUCHMOVE, (e) => {
-                    entity.rotate(e.touches[0].dy * 0.5, e.touches[0].dx * 0.5, 0);
+                    helmetEntity.rotate(e.touches[0].dy * 0.5, e.touches[0].dx * 0.5, 0);
                 });
             }
-
-            // دوران تلقائي خفيف
-            app.on('update', (dt) => {
-                entity.rotate(0, 10 * dt, 0);
-            });
         });
+
+        // وظائف الأزرار
+        function changeColor(hex) {
+            const color = new pc.Color().fromString(hex);
+            light.light.color = color;
+            document.querySelector('.top-info').style.color = hex;
+        }
+
+        function resetRotation() {
+            if(helmetEntity) helmetEntity.setEulerAngles(0, 0, 0);
+        }
 
         window.addEventListener('resize', () => app.resizeCanvas());
     </script>
