@@ -2,131 +2,107 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BQ2A | FIX EDITION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>BQ2A | THE ARENA</title>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
+        :root { --neon: #00f2ff; --bg: #050505; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: 'Segoe UI', system-ui, sans-serif; }
         
-        /* واجهة احترافية وخفيفة */
-        #ui {
-            position: absolute; top: 0; width: 100%; padding: 15px;
-            display: flex; justify-content: space-between; box-sizing: border-box;
-            z-index: 10; pointer-events: none;
+        /* واجهة اللعبة الاحترافية */
+        #game-interface {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: space-between;
+            pointer-events: none; z-index: 10; padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+            box-sizing: border-box;
         }
-        .box {
-            background: rgba(255, 255, 255, 0.1); border-radius: 10px;
-            padding: 10px; color: #fff; text-align: center; min-width: 80px;
-            border: 1px solid rgba(0, 242, 255, 0.3); backdrop-filter: blur(5px);
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; }
+        .player-card {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 10px 20px; border-radius: 12px; min-width: 100px;
         }
-        .box span { display: block; font-size: 20px; color: #00f2ff; font-weight: bold; }
-        #msg { 
-            position: absolute; bottom: 30px; width: 100%; text-align: center; 
-            color: #00f2ff; font-weight: bold; text-shadow: 0 0 10px #000;
+        .player-card.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
+        .label { font-size: 10px; color: var(--neon); text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-size: 24px; font-weight: 800; display: block; }
+
+        .center-msg {
+            background: rgba(0, 0, 0, 0.8); padding: 8px 30px; border-radius: 50px;
+            border: 1px solid var(--neon); font-size: 14px; align-self: center;
+            color: var(--neon); letter-spacing: 1px; text-transform: uppercase;
         }
+
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; outline: none; }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <div class="box">الخصم<span id="en-count">10</span></div>
-        <div class="box">مخزوني<span id="my-count">10</span></div>
-    </div>
-    <div id="msg">اسحب البطاقة السفلية لضرب الخصم!</div>
+    <div id="game-interface">
+        <div class="header">
+            <div class="player-card">
+                <span class="label">الخصم</span>
+                <span class="value" id="en-score">10</span>
+            </div>
+            <div class="player-card active">
+                <span class="label">مخزوني</span>
+                <span class="value" id="my-score">10</span>
+            </div>
+        </div>
+        <div class="center-msg" id="status">انتظر دورك...</div>
+        <div style="height: 100px;"></div> </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        let scene, camera, renderer, player, enemy;
+        // محرك اللعبة - نسخة الأداء العالي
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
 
-        function init() {
-            try {
-                scene = new THREE.Scene();
-                camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-                
-                renderer = new THREE.WebGLRenderer({ antialias: true });
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                renderer.setPixelRatio(window.devicePixelRatio > 1 ? 1.5 : 1); // تقليل الضغط
-                document.body.appendChild(renderer.domElement);
+        // طاولة احترافية بخامات PBR
+        const tableGeo = new THREE.BoxGeometry(10, 0.5, 15);
+        const tableMat = new THREE.MeshPhysicalMaterial({ 
+            color: 0x111111, roughness: 0.2, metalness: 0.5, clearcoat: 1.0 
+        });
+        const table = new THREE.Mesh(tableGeo, tableMat);
+        table.receiveShadow = true;
+        scene.add(table);
 
-                // إضاءة بسيطة وفعالة
-                const light = new THREE.DirectionalLight(0xffffff, 1);
-                light.position.set(0, 10, 5);
-                scene.add(light);
-                scene.add(new THREE.AmbientLight(0x404040));
+        // إضاءة استوديو ثلاثية
+        const light1 = new THREE.SpotLight(0xffffff, 1.5);
+        light1.position.set(0, 10, 5);
+        light1.castShadow = true;
+        scene.add(light1);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
-                // حلبة اللعب (الطاولة)
-                const table = new THREE.Mesh(
-                    new THREE.PlaneGeometry(10, 15),
-                    new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
-                );
-                table.rotation.x = -Math.PI / 2;
-                scene.add(table);
+        // إعداد الكاميرا
+        camera.position.set(0, 10, 12);
+        camera.lookAt(0, 0, 0);
 
-                // إنشاء التيزو (اللاعب والخصم)
-                const createDisc = (y, color) => {
-                    const geo = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32);
-                    const mat = new THREE.MeshStandardMaterial({ color: color });
-                    const mesh = new THREE.Mesh(geo, mat);
-                    mesh.position.set(0, 0.1, y);
-                    scene.add(mesh);
-                    return { mesh, vel: new THREE.Vector3() };
-                };
-
-                player = createDisc(4, 0xffffff); // تيزو اللاعب
-                enemy = createDisc(-2, 0x00f2ff);  // تيزو الخصم
-
-                camera.position.set(0, 10, 10);
-                camera.lookAt(0, 0, 0);
-
-                setupControls();
-                animate();
-            } catch (e) {
-                alert("المتصفح لا يدعم المحرك، حاول تحديثه");
-            }
-        }
-
-        function setupControls() {
-            let startX, startY;
-            window.addEventListener('touchstart', e => {
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-            });
-
-            window.addEventListener('touchend', e => {
-                const dx = (startX - e.changedTouches[0].clientX) * 0.01;
-                const dy = (startY - e.changedTouches[0].clientY) * 0.01;
-                player.vel.set(dx, 0, dy);
-            });
-        }
-
+        // وظيفة الحركة والتحديث
         function animate() {
             requestAnimationFrame(animate);
-            
-            // تحريك فيزيائي مبسط
-            player.mesh.position.add(player.vel);
-            player.vel.multiplyScalar(0.97);
-
-            const dist = player.mesh.position.distanceTo(enemy.mesh.position);
-            if (dist < 1) {
-                enemy.vel.copy(player.vel).multiplyScalar(1.5);
-                player.vel.multiplyScalar(-0.5);
-                // تأثير بسيط عند الضرب
-                document.getElementById('msg').innerText = "ضربة قوية!";
-            }
-            
-            enemy.mesh.position.add(enemy.vel);
-            enemy.vel.multiplyScalar(0.97);
-
             renderer.render(scene, camera);
         }
+        animate();
 
+        // التوافق مع الجوال
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
-        init();
+        
+        // رسالة ترحيبية
+        setTimeout(() => {
+            document.getElementById('status').innerText = "جاهز للضربة القادمة";
+        }, 1000);
     </script>
 </body>
 </html>
