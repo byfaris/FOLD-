@@ -3,106 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BATTAL CARDS | بطاقات المستقبل</title>
+    <title>MAMG ARENA | حلبة التصادم</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Cairo:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --magenta: #ff00ff; --bg: #050505; }
-        
-        body {
-            background: var(--bg); color: white; font-family: 'Cairo', sans-serif;
-            height: 100vh; margin: 0; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; overflow: hidden;
+        :root { --neon: #00f2ff; --energy: #ff0055; --table: #0a0a0f; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Cairo', sans-serif; overflow: hidden; }
+
+        /* الطاولة الرقمية */
+        .arena {
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #1a1a2e 0%, #050505 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative;
         }
 
-        /* حاوية البطاقة ثلاثية الأبعاد */
-        .card-container {
-            perspective: 1000px; width: 200px; height: 280px; margin-bottom: 30px;
+        /* واجهة الـ HUD (العدادات) */
+        .hud {
+            position: absolute; top: 20px; width: 90%;
+            display: flex; justify-content: space-between;
+            font-family: 'Orbitron', sans-serif; border-bottom: 1px solid rgba(0,242,255,0.2);
+            padding-bottom: 10px;
         }
 
+        .round-indicator { color: var(--energy); text-shadow: 0 0 10px var(--energy); }
+
+        /* البطاقة الفيزيائية */
         .card {
-            width: 100%; height: 100%; position: relative;
-            transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
+            width: 120px; height: 170px;
+            background: #111; border: 2px solid var(--neon); border-radius: 10px;
+            position: absolute; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+            user-select: none;
         }
 
-        .card.is-flipped { transform: rotateY(180deg); }
-
-        .card-face {
-            position: absolute; width: 100%; height: 100%;
-            backface-visibility: hidden; border-radius: 15px;
-            border: 2px solid var(--neon); display: flex;
-            align-items: center; justify-content: center; font-family: 'Orbitron';
+        .card.flipped {
+            transform: rotateX(180deg);
+            border-color: var(--energy);
+            box-shadow: 0 0 20px var(--energy);
         }
 
-        /* وجه الشعار (الخلفية) */
-        .card-back { background: #111; color: var(--magenta); }
-
-        /* وجه الرسمة (الأمامية) */
-        .card-front { 
-            background: linear-gradient(45deg, #111, #222); 
-            transform: rotateY(180deg); box-shadow: 0 0 20px var(--neon);
+        /* زر الضرب (اليد) */
+        .strike-zone {
+            position: absolute; bottom: 50px;
+            width: 100px; height: 100px;
+            border-radius: 50%; background: rgba(0, 242, 255, 0.1);
+            border: 2px dashed var(--neon);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
 
-        /* نظام الإخطار المدمج */
-        #game-status {
-            margin-top: 20px; padding: 15px; border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05); border: 1px solid #222;
-            width: 80%; max-width: 400px; text-align: center; font-size: 14px;
-        }
-
-        .btn-action {
-            background: var(--neon); color: #000; border: none;
-            padding: 12px 30px; border-radius: 50px; font-weight: bold;
-            cursor: pointer; font-family: 'Cairo'; box-shadow: 0 0 15px var(--neon);
+        #status-bar {
+            position: absolute; bottom: 20px; font-size: 14px; color: var(--neon);
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
 
-    <div style="margin-bottom: 20px; font-family: 'Orbitron'; color: var(--magenta);">STREAK: <span id="streak">0</span>/3</div>
-
-    <div class="card-container">
-        <div class="card" id="main-card">
-            <div class="card-face card-back">LOGO</div>
-            <div class="card-face card-front">POWER: 99</div>
-        </div>
+<div class="arena">
+    <div class="hud">
+        <div class="round-indicator">ROUND: <span id="round-num">1</span>/3</div>
+        <div id="score">SCORE: 0</div>
     </div>
 
-    <button class="btn-action" onclick="flipCard()">قلب البطاقة</button>
+    <div id="card-1" class="card" style="top: 30%; left: 40%;">MAMG</div>
+    <div id="card-2" class="card" style="top: 35%; left: 55%;">MAMG</div>
+    <div id="card-3" class="card" style="top: 50%; left: 45%;">MAMG</div>
 
-    <div id="game-status">بانتظار الحركة الأولى.. اقلب البطاقة لتحصل على الرسمة!</div>
+    <div class="strike-zone" onclick="performStrike()">
+        <span>HIT</span>
+    </div>
 
-    <script>
-        let streak = 0;
+    <div id="status-bar">AWAITING IMPACT...</div>
+</div>
 
-        function flipCard() {
-            const card = document.getElementById('main-card');
-            const status = document.getElementById('game-status');
-            const streakEl = document.getElementById('streak');
+<script>
+    let currentRound = 1;
+    let flippedCount = 0;
 
-            // محاكاة احتمالية الحظ (50/50)
-            const isWinner = Math.random() > 0.5;
-            
-            card.style.transform = `rotateY(${isWinner ? '180deg' : '0deg'})`;
+    function performStrike() {
+        const status = document.getElementById('status-bar');
+        const cards = document.querySelectorAll('.card');
+        
+        // محاكاة قوة الضربة الفيزيائية
+        const impactPower = Math.random() * 100;
+        
+        status.innerText = "IMPACT DETECTED: POWER " + Math.floor(impactPower);
 
-            if (isWinner) {
-                streak++;
-                status.style.color = "#00ff88";
-                status.innerText = "رائع! استقرت على الرسمة. استمر للوصول لـ 3.";
-            } else {
-                streak = 0;
-                status.style.color = "#ff4444";
-                status.innerText = "للأسف! استقرت على الشعار. ضاعت النقاط.";
+        cards.forEach(card => {
+            // إذا كانت القوة كافية، تنقلب البطاقة
+            if (impactPower > 40 && !card.classList.contains('flipped')) {
+                if(Math.random() > 0.5) { // عامل الحظ في الزاوية
+                    card.classList.add('flipped');
+                    flippedCount++;
+                }
             }
+        });
 
-            streakEl.innerText = streak;
+        document.getElementById('score').innerText = "SCORE: " + flippedCount;
 
-            if (streak === 3) {
-                status.innerText = "تهانينا! حققت 3 نقاط متتالية. لقد فزت ببطاقة الخصم!";
-                streak = 0;
-                streakEl.innerText = "0";
-            }
+        // نظام الجولات
+        if (flippedCount >= 3 || impactPower < 10) {
+            setTimeout(nextRound, 2000);
         }
-    </script>
+    }
+
+    function nextRound() {
+        if (currentRound < 3) {
+            currentRound++;
+            document.getElementById('round-num').innerText = currentRound;
+            resetCards();
+            document.getElementById('status-bar').innerText = "ROUND " + currentRound + " START";
+        } else {
+            document.getElementById('status-bar').innerText = "GAME OVER. TOTAL FLIPS: " + flippedCount;
+        }
+    }
+
+    function resetCards() {
+        document.querySelectorAll('.card').forEach(card => card.classList.remove('flipped'));
+    }
+</script>
 </body>
 </html>
