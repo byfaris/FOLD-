@@ -1,34 +1,216 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>QB2A | FIXED CONTROLS</title>
+    <title>QB2A | قبعا - ثورة البشر</title>
     <style>
         :root { --neon-blue: #00f2ff; --neon-red: #ff0044; }
         
-        /* أهم جزء لمنع التكبير والقلتشات */
+        /* منع التكبير والقلتشات نهائياً */
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background: #000; 
-            touch-action: none; /* يمنع التكبير والسحب الافتراضي */
-            -webkit-user-select: none; /* منع تحديد النص */
+            touch-action: none; 
+            -webkit-user-select: none; 
             user-select: none;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
         }
 
         canvas { display: block; touch-action: none; }
 
-        /* واجهة الجوال مع منع التكبير */
-        .mobile-controls {
-            position: absolute; bottom: 30px; width: 100%; display: flex;
-            justify-content: space-between; padding: 0 30px; box-sizing: border-box;
-            z-index: 20; touch-action: none;
+        /* واجهة البيانات العليا */
+        #hud {
+            position: absolute; top: env(safe-area-inset-top, 20px); left: 20px; 
+            color: var(--neon-blue); pointer-events: none; z-index: 10;
         }
+        .hp-bar { width: 150px; height: 8px; background: #222; border: 1px solid var(--neon-blue); margin-top: 5px; border-radius: 4px; }
+        #hp-fill { width: 100%; height: 100%; background: var(--neon-blue); transition: 0.2s; border-radius: 3px; }
+        #score-board { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
 
-        .btn-circle {
+        /* أزرار التحكم للجوال */
+        #mobile-controls {
+            position: absolute; bottom: 40px; width: 100%; 
+            display: flex; justify-content: space-between; 
+            padding: 0 40px; box-sizing: border-box; z-index: 20;
+            display: none; /* تظهر فقط في الجوال عبر JS */
+        }
+        .control-btn {
             width: 80px; height: 80px; background: rgba(0, 242, 255, 0.1);
-            border: 3px solid var(--neon-blue); border-radius: 50%;
+            border: 2px solid var(--neon-blue); border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: bold; 
-            pointer-events: auto; /* التأكد من استقبال اللمس */
+            color: white; font-weight: bold; font-size: 14px;
+            touch-action: none;
+        }
+        .fire-btn { 
+            border-color: var(--neon-red); background: rgba(255, 0, 68, 0.15); 
+            width: 90px; height: 90px; font-size: 18px; box-shadow: 0 0 15px var(--neon-red);
         }
     </style>
 </head>
+<body>
+
+    <div id="hud">
+        <div id="score-board">تصفية الـ AI: 0</div>
+        <div class="hp-bar"><div id="hp-fill"></div></div>
+        <div style="font-size: 10px; margin-top: 5px; color: #555;">سيرفر: QB2A-GLOBAL</div>
+    </div>
+
+    <div id="mobile-controls">
+        <div class="control-btn" id="move-pad">حركة</div>
+        <div class="control-btn fire-btn" id="fire-pad">هجوم</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let score = 0;
+        let health = 100;
+        let isMobile = ('ontouchstart' in window);
+        if(isMobile) document.getElementById('mobile-controls').style.display = 'flex';
+
+        const player = {
+            x: window.innerWidth / 2,
+            y: window.innerHeight / 2,
+            size: 15,
+            color: "#00f2ff",
+            speed: 5,
+            bullets: []
+        };
+
+        let enemies = [];
+        const keys = {};
+
+        // 1. منع التكبير المزعج (Double Tap Zoom)
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault(); 
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            let now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, false);
+
+        // 2. نظام القتال والحركة
+        window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+        
+        // إطلاق النار (كمبيوتر بالماوس)
+        window.addEventListener('mousedown', e => shoot(e.clientX, e.clientY));
+        
+        // إطلاق النار (جوال بالزر)
+        document.getElementById('fire-pad').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            shoot(player.x, player.y - 100); // إطلاق للأمام
+        });
+
+        function shoot(tx, ty) {
+            const angle = Math.atan2(ty - player.y, tx - player.x);
+            player.bullets.push({
+                x: player.x, y: player.y,
+                vx: Math.cos(angle) * 8, vy: Math.sin(angle) * 8
+            });
+        }
+
+        function spawnEnemy() {
+            setInterval(() => {
+                if(enemies.length < 15) {
+                    const x = Math.random() > 0.5 ? -30 : canvas.width + 30;
+                    const y = Math.random() * canvas.height;
+                    enemies.push({ x, y, size: 12, speed: 1.5 + Math.random() * 2 });
+                }
+            }, 1500);
+        }
+
+        function update() {
+            // حركة لوحة المفاتيح
+            if (keys['w'] || keys['arrowup']) player.y -= player.speed;
+            if (keys['s'] || keys['arrowdown']) player.y += player.speed;
+            if (keys['a'] || keys['arrowleft']) player.x -= player.speed;
+            if (keys['d'] || keys['arrowright']) player.x += player.speed;
+
+            // حدود الشاشة
+            player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+            player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+
+            // تحديث الرصاص
+            player.bullets.forEach((b, i) => {
+                b.x += b.vx; b.y += b.vy;
+                if(b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) player.bullets.splice(i, 1);
+            });
+
+            // تحديث الأعداء (مطاردة البشر)
+            enemies.forEach((en, i) => {
+                const angle = Math.atan2(player.y - en.y, player.x - en.x);
+                en.x += Math.cos(angle) * en.speed;
+                en.y += Math.sin(angle) * en.speed;
+
+                // تصادم الرصاص بالعدو
+                player.bullets.forEach((b, bi) => {
+                    if(Math.hypot(b.x - en.x, b.y - en.y) < en.size + 5) {
+                        enemies.splice(i, 1);
+                        player.bullets.splice(bi, 1);
+                        score += 10;
+                        document.getElementById('score-board').innerText = `تصفية الـ AI: ${score}`;
+                    }
+                });
+
+                // تصادم العدو باللاعب
+                if(Math.hypot(player.x - en.x, player.y - en.y) < player.size + en.size) {
+                    health -= 0.5;
+                    document.getElementById('hp-fill').style.width = health + "%";
+                    if(health <= 0) {
+                        alert("سقطت البشرية.. الذكاء الاصطناعي انتصر!");
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+        function draw() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // رسم اللاعب (البشري)
+            ctx.shadowBlur = 15; ctx.shadowColor = player.color;
+            ctx.fillStyle = player.color;
+            ctx.beginPath(); ctx.arc(player.x, player.y, player.size, 0, Math.PI*2); ctx.fill();
+
+            // رسم الرصاص
+            ctx.fillStyle = "#fff"; ctx.shadowBlur = 5;
+            player.bullets.forEach(b => {
+                ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI*2); ctx.fill();
+            });
+
+            // رسم الأعداء (AI)
+            ctx.fillStyle = "#ff0044"; ctx.shadowColor = "#ff0044";
+            enemies.forEach(en => {
+                ctx.beginPath(); ctx.arc(en.x, en.y, en.size, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        function animate() {
+            update();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // ضبط المقاسات
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        spawnEnemy();
+        animate();
+    </script>
+</body>
+</html>
