@@ -1,15 +1,87 @@
-// إنشاء اتصال P2P بين جهازين
-const peerConnection = new RTCPeerConnection({
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19002' } // سيرفر لتحديد عنوان الـ IP فقط
-  ]
-});
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>P2P Private Chat</title>
+    <style>
+        :root { --bg: #0a0a0a; --accent: #00ff88; --text: #eee; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; padding: 20px; }
+        
+        #chat-box { 
+            height: 300px; border: 1px solid #333; border-radius: 10px; 
+            padding: 15px; overflow-y: auto; background: #111; margin-bottom: 10px;
+        }
+        
+        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 80%; }
+        .sent { background: var(--accent); color: #000; align-self: flex-start; }
+        .received { background: #333; color: #fff; }
 
-// إنشاء قناة بيانات (Data Channel) لنقل النصوص أو الملفات
-const dataChannel = peerConnection.createDataChannel("chat");
+        input { 
+            width: calc(100% - 100px); padding: 12px; background: #222; 
+            border: 1px solid #444; color: #fff; border-radius: 8px; 
+        }
+        
+        button { 
+            padding: 12px 20px; background: var(--accent); border: none; 
+            border-radius: 8px; cursor: pointer; font-weight: bold; 
+        }
 
-dataChannel.onopen = () => console.log("تم الاتصال المباشر P2P! 🚀");
-dataChannel.onmessage = (event) => console.log("رسالة من الطرف الآخر: ", event.data);
+        .status { font-size: 12px; color: var(--accent); margin-bottom: 10px; }
+    </style>
+</head>
+<body>
 
-// إرسال بيانات مباشرة دون سيرفر وسيط
-dataChannel.send("أهلاً بك في عالم اللامركزية");
+    <h2>🔐 محادثة P2P مشفرة</h2>
+    <div class="status" id="status">الحالة: بانتظار الاتصال المباشر...</div>
+    
+    <div id="chat-box"></div>
+
+    <div style="display: flex; gap: 10px;">
+        <input type="text" id="messageInput" placeholder="اكتب رسالتك السرية هنا...">
+        <button onclick="sendMessage()">إرسال</button>
+    </div>
+
+    <script>
+        // إعدادات WebRTC
+        let peerConnection = new RTCPeerConnection({
+            iceServers: [{ urls: 'stun:stun.l.google.com:19002' }]
+        });
+        
+        let dataChannel;
+
+        // إنشاء قناة البيانات (الطرف الأول)
+        function setupMaster() {
+            dataChannel = peerConnection.createDataChannel("chat");
+            setupChannelEvents();
+        }
+
+        // استقبال قناة البيانات (الطرف الثاني)
+        peerConnection.ondatachannel = (event) => {
+            dataChannel = event.channel;
+            setupChannelEvents();
+        };
+
+        function setupChannelEvents() {
+            dataChannel.onopen = () => document.getElementById('status').innerText = "الحالة: متصل مباشرة (P2P Secured)";
+            dataChannel.onmessage = (e) => appendMessage(e.data, 'received');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            if (dataChannel && dataChannel.readyState === "open") {
+                dataChannel.send(input.value);
+                appendMessage(input.value, 'sent');
+                input.value = '';
+            }
+        }
+
+        function appendMessage(text, side) {
+            const div = document.createElement('div');
+            div.className = `msg ${side}`;
+            div.innerText = text;
+            document.getElementById('chat-box').appendChild(div);
+            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+        }
+    </script>
+</body>
+</html>
