@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNAUTHORIZED ACCESS | دخول غير مصرح</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Cairo:wght@700&display=swap" rel="stylesheet">
+    <title>S.E.C.R.E.T | 秘密文件</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Noto+Sans+TC:wght@700&display=swap" rel="stylesheet">
     <style>
         :root { --red: #ff0000; --cyan: #00f2ff; --black: #000; }
-        
         * { cursor: none; margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: var(--black);
             color: white;
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
             height: 100vh;
             display: flex;
             align-items: center;
@@ -23,117 +22,108 @@
             background-size: 100% 3px;
         }
 
-        /* تأثير التشويش الجذري (Global Glitch) */
-        .glitch-layer {
+        .glitch-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 0, 0, 0.05);
-            pointer-events: none;
-            z-index: 999;
-            opacity: 0;
+            pointer-events: none; z-index: 999; opacity: 0;
         }
-
-        .active-glitch { animation: flash 0.2s infinite; opacity: 1; }
+        .active-glitch { animation: flash 0.15s infinite; opacity: 1; }
         @keyframes flash { 0% { background: rgba(255,0,0,0.1); } 50% { background: rgba(0,242,255,0.1); } 100% { background: transparent; } }
 
-        /* الكرت المركزي الغامض */
         .gate-card {
-            border: 1px solid #222;
+            border: 1px solid #111;
             padding: 60px;
-            background: rgba(5, 5, 5, 0.9);
+            background: rgba(2, 2, 2, 0.95);
             text-align: center;
             position: relative;
-            box-shadow: 0 0 50px rgba(255, 0, 0, 0.1);
-            transition: 0.2s;
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.05);
+            transition: 0.3s;
+            max-width: 500px;
         }
 
         .gate-card:hover { 
-            border-color: var(--red); 
-            transform: scale(1.02) skewX(-1deg);
-            box-shadow: 0 0 100px rgba(255, 0, 0, 0.3);
+            border-color: var(--cyan); 
+            box-shadow: 0 0 60px rgba(0, 242, 255, 0.2);
+            transform: skewY(-1deg);
         }
 
-        h1 { font-family: 'Orbitron'; font-size: 2.5rem; color: var(--red); text-shadow: 2px 2px #000, -2px -2px var(--cyan); margin-bottom: 20px; }
+        h1 { font-size: 1.8rem; color: var(--cyan); margin-bottom: 10px; letter-spacing: 5px; }
+        h2 { font-size: 1.2rem; color: #444; margin-bottom: 30px; font-weight: normal; }
         
-        .price-tag { font-family: 'Orbitron'; font-size: 4rem; color: #fff; margin: 20px 0; letter-spacing: -5px; }
+        .price-tag { font-size: 4.5rem; color: #fff; margin: 20px 0; text-shadow: 4px 4px var(--red); }
 
-        .secure-btn {
-            background: white; color: black; border: none; padding: 20px 60px;
-            font-weight: 900; font-size: 1.5rem; text-transform: uppercase;
-            box-shadow: 5px 5px 0 var(--red); transition: 0.1s;
+        .buy-button {
+            background: transparent; color: var(--cyan); border: 2px solid var(--cyan);
+            padding: 20px 50px; font-weight: 900; font-size: 1.2rem;
+            text-transform: uppercase; transition: 0.2s;
+            box-shadow: 0 0 15px var(--cyan);
         }
 
-        .secure-btn:active { transform: translate(3px, 3px); box-shadow: none; }
+        .buy-button:hover { background: var(--cyan); color: #000; box-shadow: 0 0 30px var(--cyan); }
 
-        /* مؤشر ماوس مخصص مخيف */
         #custom-cursor {
-            position: fixed; width: 40px; height: 40px; border: 2px solid var(--red);
+            position: fixed; width: 20px; height: 20px; background: var(--cyan);
             border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%);
-            z-index: 10000; transition: width 0.1s, height 0.1s;
+            z-index: 10000; mix-blend-mode: difference;
         }
+
+        .warning-text { position: absolute; bottom: 20px; font-size: 0.6rem; color: #222; letter-spacing: 3px; }
     </style>
 </head>
-<body onmousemove="handleMove(event)" onclick="handleClick()">
+<body onmousemove="syncCursor(event)" onclick="triggerEffect()">
 
-    <div class="glitch-layer" id="glitch"></div>
+    <div class="glitch-overlay" id="glitch"></div>
     <div id="custom-cursor"></div>
 
     <div class="gate-card">
-        <h1 id="main-title">STRICTLY CONFIDENTIAL</h1>
-        <p>مجلد اللغة الممنوعة - شراء الملف سيعرضك للمسؤولية.</p>
+        <h1>UNCLASSIFIED FILE</h1>
+        <h2>秘密言語文件 - 限制訪問</h2>
+        <p style="color: #666; margin-bottom: 20px;">Accessing this data may cause permanent cognitive dissonance.</p>
         <div class="price-tag">$4.99</div>
-        <button class="secure-btn">امتلاك السر</button>
+        <button class="buy-button">PURCHASE ACCESS</button>
     </div>
+
+    <div class="warning-text">SYSTEM_STATUS: COMPROMISED | 系統狀態：已損壞</div>
 
     <script>
         const glitch = document.getElementById('glitch');
         const cursor = document.getElementById('custom-cursor');
-        const title = document.getElementById('main-title');
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // مصفوفة أصوات (تنبيهات نظام مخيفة)
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function playDisturbingSound(freq, type) {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            gain.gain.setValueAtTime(0.05, ctx.currentTime);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.1);
+        function playGhostSound(freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
         }
 
-        function handleMove(e) {
+        function syncCursor(e) {
             cursor.style.left = e.clientX + 'px';
             cursor.style.top = e.clientY + 'px';
-            
-            // صوت خفيف جداً مع الحركة
-            if(Math.random() > 0.95) playDisturbingSound(100, 'sawtooth');
+            if(Math.random() > 0.98) playGhostSound(Math.random() * 200);
         }
 
-        function handleClick() {
-            // تأثير التشويش عند الضغط
+        function triggerEffect() {
             glitch.classList.add('active-glitch');
-            playDisturbingSound(50, 'square');
+            playGhostSound(50);
+            setTimeout(() => glitch.classList.remove('active-glitch'), 400);
             
-            setTimeout(() => {
-                glitch.classList.remove('active-glitch');
-            }, 500);
-
-            // تغيير النص لثوانٍ
-            const original = title.innerText;
-            title.innerText = "WE SEE YOU";
-            setTimeout(() => title.innerText = original, 1000);
+            // Randomly change text to Chinese on click
+            const h1 = document.querySelector('h1');
+            const original = h1.innerText;
+            h1.innerText = "你在看什麼？";
+            setTimeout(() => h1.innerText = original, 800);
         }
 
-        // تشويش عشوائي كل فترة
+        // Periodic Glitch
         setInterval(() => {
-            if(Math.random() > 0.7) {
+            if(Math.random() > 0.8) {
                 glitch.classList.add('active-glitch');
-                setTimeout(() => glitch.classList.remove('active-glitch'), 100);
+                setTimeout(() => glitch.classList.remove('active-glitch'), 150);
             }
-        }, 3000);
+        }, 4000);
     </script>
 </body>
 </html>
