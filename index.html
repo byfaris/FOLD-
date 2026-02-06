@@ -2,125 +2,118 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>الضمان الرقمي | التوثيق البصري</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر فارس الرقمي | Digital Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a365d; --accent: #c5a059; --bg: #f4f7f9; --card: #ffffff; --text: #2d3748; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Noto Kufi Arabic', sans-serif; }
-        .container { padding: 30px 20px; padding-bottom: 120px; max-width: 500px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 30px; }
-        
-        /* بطاقة الضمان مع الصورة */
-        .card {
-            background: var(--card); border-radius: 15px; padding: 20px;
-            margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            display: flex; gap: 15px; align-items: center; border-right: 5px solid var(--accent);
+        :root {
+            --main-color: #2563eb; /* أزرق تقني */
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
         }
-        .product-img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; background: #eee; }
-        .card-info { flex: 1; }
-        .serial { font-family: monospace; font-size: 10px; color: #a0aec0; }
-        .p-name { font-size: 16px; font-weight: 600; color: var(--primary); margin: 5px 0; }
-        .expiry-text { font-size: 11px; color: #e53e3e; font-weight: 600; }
 
-        /* نافذة الإدخال */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; }
-        .modal-box { background: #fff; width: 85%; max-width: 350px; padding: 25px; border-radius: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 8px; font-family: 'Noto Kufi Arabic'; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; padding: 0; color: var(--text-dark);
+        }
 
-        /* الكاميرا */
-        #camera-view { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        .shutter { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 70px; height: 70px; border-radius: 50%; border: 5px solid #fff; }
+        /* الهيدر */
+        header {
+            background: var(--card-bg);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
 
-        .btn-main { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; padding: 18px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-weight: 600; }
+        .logo { font-size: 22px; font-weight: 700; color: var(--main-color); }
+
+        /* حاوية المنتجات */
+        .container {
+            max-width: 1200px; margin: 40px auto; padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        /* بطاقة المنتج */
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+        .product-img {
+            width: 100%; height: 180px;
+            background: #e2e8f0;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: #94a3b8;
+        }
+
+        .product-content { padding: 20px; }
+        .category { font-size: 12px; color: var(--main-color); font-weight: bold; }
+        .title { font-size: 18px; margin: 10px 0; font-weight: 700; }
+        .price { font-size: 20px; color: #059669; font-weight: 700; }
+
+        .buy-btn {
+            width: 100%; padding: 12px; background: var(--main-color);
+            color: white; border: none; border-radius: 8px;
+            margin-top: 15px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .buy-btn:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
 
-    <div id="modal">
-        <div class="modal-box">
-            <h3 style="margin:0 0 15px; color:var(--primary)">بيانات التوثيق</h3>
-            <div id="preview-container" style="text-align: center; margin-bottom: 10px;">
-                <canvas id="canvas" style="display:none;"></canvas>
-                <img id="photo-preview" style="width:100px; height:100px; border-radius:10px; object-fit:cover; border:2px solid var(--accent)">
+    <header>
+        <div class="logo">متجر فارس الرقمي</div>
+        <div class="cart">🛒 السلة (0)</div>
+    </header>
+
+    <div class="container">
+        <div class="product-card">
+            <div class="product-img">PS Plus 12 Months</div>
+            <div class="product-content">
+                <span class="category">بطاقات شحن</span>
+                <div class="title">اشتراك بلايستيشن بلس سنة</div>
+                <div class="price">249 ر.س</div>
+                <button class="buy-btn" onclick="addToCart()">شراء الآن</button>
             </div>
-            <input type="text" id="p-name-in" placeholder="اسم المنتج">
-            <input type="date" id="p-expiry-in">
-            <button onclick="saveAsset()" style="width:100%; padding:15px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-weight:600">حفظ في الخزنة</button>
+        </div>
+
+        <div class="product-card">
+            <div class="product-img">Windows 11 Key</div>
+            <div class="product-content">
+                <span class="category">برمجيات</span>
+                <div class="title">كود تفعيل ويندوز 11 برو</div>
+                <div class="price">45 ر.س</div>
+                <button class="buy-btn" onclick="addToCart()">شراء الآن</button>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="product-img">Canva Pro 1 Year</div>
+            <div class="product-content">
+                <span class="category">اشتراكات</span>
+                <div class="title">اشتراك كانفا برو سنة</div>
+                <div class="price">30 ر.س</div>
+                <button class="buy-btn" onclick="addToCart()">شراء الآن</button>
+            </div>
         </div>
     </div>
 
-    <div id="camera-view">
-        <video id="video" playsinline></video>
-        <div class="shutter" onclick="takePhoto()"></div>
-    </div>
-
-    <div class="container">
-        <header>
-            <h1>الضمان الرقمي</h1>
-            <p>Sovereign Visual Vault</p>
-        </header>
-        <div id="list"></div>
-    </div>
-
-    <button class="btn-main" onclick="openCam()">بدء المسح البصري</button>
-
     <script>
-        let stream = null;
-        let capturedImage = "";
-
-        async function openCam() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('video').srcObject = stream;
-                document.getElementById('video').play();
-                document.getElementById('camera-view').style.display = 'block';
-            } catch (e) { alert("الكاميرا مطلوبة"); }
+        function addToCart() {
+            alert("تم إضافة المنتج للسلة بنجاح!");
         }
-
-        function takePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = 300; // حجم صغير للحفظ
-            canvas.height = 300;
-            context.drawImage(video, 0, 0, 300, 300);
-            capturedImage = canvas.toDataURL('image/jpeg', 0.7); // ضغط الصورة 70%
-            document.getElementById('photo-preview').src = capturedImage;
-            document.getElementById('camera-view').style.display = 'none';
-            document.getElementById('modal').style.display = 'flex';
-            if (stream) stream.getTracks().forEach(t => t.stop());
-        }
-
-        function saveAsset() {
-            const name = document.getElementById('p-name-in').value;
-            const expiry = document.getElementById('p-expiry-in').value;
-            if (!name || !expiry) { alert("أكمل البيانات"); return; }
-
-            const asset = { name, expiry, image: capturedImage, id: "W-" + Date.now().toString().slice(-6) };
-            let assets = JSON.parse(localStorage.getItem('visual_vault') || '[]');
-            assets.unshift(asset);
-            localStorage.setItem('visual_vault', JSON.stringify(assets));
-
-            document.getElementById('modal').style.display = 'none';
-            render();
-        }
-
-        function render() {
-            const assets = JSON.parse(localStorage.getItem('visual_vault') || '[]');
-            document.getElementById('list').innerHTML = assets.map(a => `
-                <div class="card">
-                    <img src="${a.image}" class="product-img">
-                    <div class="card-info">
-                        <div class="serial">ID: ${a.id}</div>
-                        <div class="p-name">${a.name}</div>
-                        <div class="expiry-text">ينتهي: ${a.expiry}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        window.onload = render;
     </script>
 </body>
 </html>
