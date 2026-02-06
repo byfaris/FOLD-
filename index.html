@@ -3,130 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMG STRIKE | ضربة المامجي</title>
+    <title>THE ARENA | الحلبة</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Cairo:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --magenta: #ff00ff; --table-bg: #08080c; }
-        
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Cairo', sans-serif; }
+        :root { --cyan: #00f2ff; --magenta: #ff00ff; --bg: #020205; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Cairo', sans-serif; overflow: hidden; }
 
-        /* الطاولة الرقمية */
-        .table {
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, #151525 0%, #000 100%);
-            position: relative; perspective: 1000px;
-        }
-
-        /* العدادات (HUD) */
+        /* HUD - العدادات العلوية */
         .hud {
-            position: absolute; top: 30px; width: 100%; padding: 0 5%;
-            display: flex; justify-content: space-between; z-index: 100;
-            font-family: 'Orbitron'; color: var(--neon);
+            position: fixed; top: 20px; width: 100%; display: flex;
+            justify-content: space-around; z-index: 100; pointer-events: none;
+        }
+        .stat-box {
+            background: rgba(0,0,0,0.6); border: 2px solid var(--cyan);
+            padding: 5px 30px; border-radius: 30px; box-shadow: 0 0 15px var(--cyan);
+            text-align: center; font-family: 'Orbitron';
         }
 
-        /* البطاقة الرقمية */
-        .card {
-            width: 130px; height: 180px;
-            background: #111; border: 2px solid var(--neon); border-radius: 12px;
-            position: absolute; top: 40%; left: 50%;
-            transform: translate(-50%, -50%) rotateZ(5deg);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
-            font-weight: bold; font-size: 20px; color: var(--neon);
+        /* حلبة اللعب */
+        #game-canvas { position: absolute; top: 0; left: 0; cursor: pointer; }
+
+        /* اليد الرقمية (تصميم مستقبلي) */
+        #striking-hand {
+            position: absolute; width: 250px; pointer-events: none;
+            z-index: 50; display: none; filter: drop-shadow(0 0 10px var(--cyan));
         }
 
-        .card.flipped {
-            transform: translate(-50%, -50%) rotateX(180deg) rotateZ(-10deg);
-            border-color: var(--magenta); color: var(--magenta);
-            box-shadow: 0 0 25px rgba(255, 0, 255, 0.4);
+        /* شريط القوة (Progress Bar) */
+        .power-bar {
+            position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+            width: 15px; height: 200px; background: #111; border: 1px solid var(--cyan);
+            border-radius: 10px; overflow: hidden;
         }
+        .power-fill { height: 70%; width: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
 
-        /* اليد الرقمية (The Striking Hand) */
-        .hand-trigger {
-            position: absolute; width: 250px; height: 250px;
-            bottom: -300px; left: 50%; transform: translateX(-50%);
-            background: url('https://cdn-icons-png.flaticon.com/512/3021/3021814.png'); /* يد افتراضية */
-            background-size: contain; background-repeat: no-repeat;
-            z-index: 200; pointer-events: none; transition: 0.2s;
-            filter: drop-shadow(0 0 20px var(--neon));
-        }
-
-        .hand-anim { animation: strike-action 0.4s ease-out forwards; }
-
-        @keyframes strike-action {
-            0% { bottom: -300px; transform: translateX(-50%) scale(1); }
-            50% { bottom: 40%; transform: translateX(-50%) scale(1.3); } /* لحظة الاصطدام */
-            100% { bottom: -300px; transform: translateX(-50%) scale(1); }
-        }
-
-        /* تأثير اهتزاز الشاشة */
-        .shake { animation: shake-screen 0.2s; }
-        @keyframes shake-screen {
-            0% { transform: translate(1px, 1px); }
-            50% { transform: translate(-2px, -2px); }
-            100% { transform: translate(0, 0); }
-        }
-
-        .click-anywhere {
-            position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: #444; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;
+        /* الزر السفلي (غامض) */
+        .action-gate {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: none; border: 2px solid var(--cyan); color: white;
+            padding: 10px 40px; border-radius: 20px; font-weight: bold;
+            box-shadow: 0 0 10px var(--cyan); cursor: pointer;
         }
     </style>
 </head>
-<body onclick="triggerStrike()">
+<body onclick="handleStrike(event)">
 
-<div class="table" id="table-node">
     <div class="hud">
-        <div>ROUND: <span id="round">1</span>/3</div>
-        <div>STRIKES: <span id="score">0</span></div>
+        <div class="stat-box"><div>الشحاق</div><div id="p1-score">10</div></div>
+        <div class="stat-box" style="border-color: white; box-shadow: 0 0 15px #fff;"><div>الشحاق</div><div>10</div></div>
     </div>
 
-    <div id="target-card" class="card">MAMG</div>
+    <div class="power-bar"><div class="power-fill"></div></div>
 
-    <div class="hand-trigger" id="hand"></div>
+    <canvas id="game-canvas"></canvas>
 
-    <div class="click-anywhere">اضغط في أي مكان لضرب البطاقة</div>
-</div>
+    <img id="striking-hand" src="https://i.imgur.com/your-robot-hand.png" alt="hand">
 
-<script>
-    let strikes = 0;
-    let isProcessing = false;
+    <button class="action-gate">الغي مينية العور!</button>
 
-    function triggerStrike() {
-        if (isProcessing) return;
-        isProcessing = true;
+    <script>
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-        const hand = document.getElementById('hand');
-        const card = document.getElementById('target-card');
-        const table = document.getElementById('table-node');
-        const scoreEl = document.getElementById('score');
+        let cards = [
+            { x: canvas.width/2, y: canvas.height/2, flipped: false, angle: 0 },
+            { x: canvas.width/2 + 20, y: canvas.height/2 + 10, flipped: false, angle: 5 }
+        ];
 
-        // تشغيل أنيميشن اليد
-        hand.classList.remove('hand-anim');
-        void hand.offsetWidth; // ريسيت للأنيميشن
-        hand.classList.add('hand-anim');
-
-        // توقيت الاصطدام (عندما تصل اليد للبطاقة)
-        setTimeout(() => {
-            table.classList.add('shake');
+        function drawArena() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // حساب احتمالية قلب البطاقة بناءً على "قوة الضربة"
-            const hitPower = Math.random();
-            if (hitPower > 0.4 && !card.classList.contains('flipped')) {
-                card.classList.add('flipped');
-                strikes++;
-                scoreEl.innerText = strikes;
-            } else if (card.classList.contains('flipped')) {
-                // إذا كانت مقلوبة، هناك احتمال لتعود لوضعها الأصلي
-                if (hitPower > 0.7) card.classList.remove('flipped');
-            }
+            // رسم البطاقات بتأثير الظل والـ 3D
+            cards.forEach(card => {
+                ctx.save();
+                ctx.translate(card.x, card.y);
+                ctx.rotate(card.angle * Math.PI / 180);
+                
+                // ظل البطاقة
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = card.flipped ? "#ff00ff" : "#00f2ff";
+                
+                // جسم البطاقة
+                ctx.fillStyle = "#111";
+                ctx.strokeStyle = card.flipped ? "#ff00ff" : "#00f2ff";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.roundRect(-60, -85, 120, 170, 10);
+                ctx.fill();
+                ctx.stroke();
+                
+                // شعار البطاقة
+                ctx.fillStyle = card.flipped ? "#ff00ff" : "#00f2ff";
+                ctx.font = "bold 20px Cairo";
+                ctx.fillText("MAMG", -35, 10);
+                
+                ctx.restore();
+            });
+            requestAnimationFrame(drawArena);
+        }
 
-            setTimeout(() => table.classList.remove('shake'), 200);
-        }, 200);
+        function handleStrike(e) {
+            // 1. تأثير الانفجار الضوئي (مثل Marvel Snap)
+            createExplosion(e.clientX, e.clientY);
 
-        setTimeout(() => isProcessing = false, 400);
-    }
-</script>
+            // 2. فحص التصادم مع البطاقات
+            cards.forEach(card => {
+                const dist = Math.hypot(card.x - e.clientX, card.y - e.clientY);
+                if (dist < 150) {
+                    card.flipped = !card.flipped; // قلب البطاقة
+                    card.angle += (Math.random() - 0.5) * 40; // تحريك الزاوية
+                }
+            });
+
+            // 3. اهتزاز الكاميرا
+            document.body.style.transform = `translate(${(Math.random()-0.5)*10}px, ${(Math.random()-0.5)*10}px)`;
+            setTimeout(() => document.body.style.transform = 'none', 100);
+        }
+
+        function createExplosion(x, y) {
+            // هنا نبرمج جزيئات النيون (VFX)
+            ctx.beginPath();
+            ctx.arc(x, y, 50, 0, Math.PI*2);
+            ctx.fillStyle = "rgba(0, 242, 255, 0.3)";
+            ctx.fill();
+        }
+
+        drawArena();
+    </script>
 </body>
 </html>
