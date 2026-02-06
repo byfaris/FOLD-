@@ -3,117 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متجر فارس الرقمي | Digital Store</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <title>FARES FUTURE STORE | 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Cairo:wght@300;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --main-color: #2563eb; /* أزرق تقني */
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-dark: #1e293b;
+            --accent: #00f2ff; /* لون المستقبل */
+            --bg: #030712;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--bg-color);
-            margin: 0; padding: 0; color: var(--text-dark);
+            margin: 0; background-color: var(--bg); color: #fff;
+            font-family: 'Cairo', sans-serif; overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%);
         }
 
-        /* الهيدر */
+        /* خلفية متحركة خفيفة */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.2; pointer-events: none;
+        }
+
         header {
-            background: var(--card-bg);
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: flex; justify-content: space-between; align-items: center;
+            padding: 30px; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(15px); border-bottom: 1px solid var(--border);
             position: sticky; top: 0; z-index: 100;
         }
 
-        .logo { font-size: 22px; font-weight: 700; color: var(--main-color); }
+        .logo { 
+            font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 700; 
+            letter-spacing: 3px; color: var(--accent); text-shadow: 0 0 15px var(--accent);
+        }
 
-        /* حاوية المنتجات */
         .container {
-            max-width: 1200px; margin: 40px auto; padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
+            max-width: 1200px; margin: 60px auto; padding: 0 20px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 40px;
         }
 
-        /* بطاقة المنتج */
-        .product-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            overflow: hidden;
-            transition: 0.3s;
-            border: 1px solid #e2e8f0;
+        /* بطاقة المنتج المستقبلية */
+        .future-card {
+            background: var(--glass); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 24px; padding: 25px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
         }
 
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-
-        .product-img {
-            width: 100%; height: 180px;
-            background: #e2e8f0;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: #94a3b8;
+        .future-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0, 242, 255, 0.1);
         }
 
-        .product-content { padding: 20px; }
-        .category { font-size: 12px; color: var(--main-color); font-weight: bold; }
-        .title { font-size: 18px; margin: 10px 0; font-weight: 700; }
-        .price { font-size: 20px; color: #059669; font-weight: 700; }
-
-        .buy-btn {
-            width: 100%; padding: 12px; background: var(--main-color);
-            color: white; border: none; border-radius: 8px;
-            margin-top: 15px; font-weight: bold; cursor: pointer;
-            transition: 0.2s;
+        .future-card::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.05) 0%, transparent 70%);
+            opacity: 0; transition: 0.4s;
         }
 
-        .buy-btn:hover { background: #1d4ed8; }
+        .future-card:hover::before { opacity: 1; }
+
+        .token-icon {
+            width: 60px; height: 60px; background: rgba(0, 242, 255, 0.1);
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; color: var(--accent); margin-bottom: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+
+        .title { font-size: 20px; font-weight: 700; margin: 10px 0; letter-spacing: 1px; }
+        .desc { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 20px; }
+
+        .price-tag {
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 1px solid var(--border); padding-top: 20px;
+        }
+
+        .price { font-family: 'Orbitron', sans-serif; font-size: 22px; color: var(--accent); }
+
+        .buy-now {
+            background: var(--accent); color: #000; border: none;
+            padding: 12px 25px; border-radius: 12px; font-weight: 700;
+            cursor: pointer; transition: 0.3s; font-family: 'Cairo';
+        }
+
+        .buy-now:hover { box-shadow: 0 0 20px var(--accent); transform: scale(1.05); }
+
+        /* شارة الحالة */
+        .status { font-size: 10px; color: #00ff88; text-transform: uppercase; letter-spacing: 2px; }
+
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">متجر فارس الرقمي</div>
-        <div class="cart">🛒 السلة (0)</div>
+        <div class="logo">FARES.V3</div>
+        <div style="font-size: 14px; opacity: 0.6;">System Status: <span style="color: #00ff88;">Online</span></div>
     </header>
 
     <div class="container">
-        <div class="product-card">
-            <div class="product-img">PS Plus 12 Months</div>
-            <div class="product-content">
-                <span class="category">بطاقات شحن</span>
-                <div class="title">اشتراك بلايستيشن بلس سنة</div>
-                <div class="price">249 ر.س</div>
-                <button class="buy-btn" onclick="addToCart()">شراء الآن</button>
+        <div class="future-card">
+            <div class="status">● Instant Delivery</div>
+            <div class="token-icon">⚡</div>
+            <div class="title">اشتراك الذكاء الاصطناعي</div>
+            <p class="desc">وصول كامل لمحركات التوليد المتقدمة 2026 بخصوصية تامة.</p>
+            <div class="price-tag">
+                <div class="price">$19.00</div>
+                <button class="buy-now">امتلاك الآن</button>
             </div>
         </div>
 
-        <div class="product-card">
-            <div class="product-img">Windows 11 Key</div>
-            <div class="product-content">
-                <span class="category">برمجيات</span>
-                <div class="title">كود تفعيل ويندوز 11 برو</div>
-                <div class="price">45 ر.س</div>
-                <button class="buy-btn" onclick="addToCart()">شراء الآن</button>
+        <div class="future-card">
+            <div class="status">● Verified Code</div>
+            <div class="token-icon">🔑</div>
+            <div class="title">مفتاح نظام التشغيل</div>
+            <p class="desc">تفعيل أبدي لنظم الحوسبة السحابية مع دعم التحديثات الأمنية.</p>
+            <div class="price-tag">
+                <div class="price">$45.00</div>
+                <button class="buy-now">امتلاك الآن</button>
             </div>
         </div>
 
-        <div class="product-card">
-            <div class="product-img">Canva Pro 1 Year</div>
-            <div class="product-content">
-                <span class="category">اشتراكات</span>
-                <div class="title">اشتراك كانفا برو سنة</div>
-                <div class="price">30 ر.س</div>
-                <button class="buy-btn" onclick="addToCart()">شراء الآن</button>
+        <div class="future-card">
+            <div class="status">● Premium Access</div>
+            <div class="token-icon">🎮</div>
+            <div class="title">بطاقة شحن الألعاب</div>
+            <p class="desc">رصيد رقمي صالح للاستخدام في كافة منصات الميتافيرس والألعاب.</p>
+            <div class="price-tag">
+                <div class="price">$100.00</div>
+                <button class="buy-now">امتلاك الآن</button>
             </div>
         </div>
     </div>
 
-    <script>
-        function addToCart() {
-            alert("تم إضافة المنتج للسلة بنجاح!");
-        }
-    </script>
 </body>
 </html>
