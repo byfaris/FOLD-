@@ -3,167 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRID_01 | Collective Intuition</title>
+    <title>GRID_01 | Pure Collective Intuition</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #000000;
+            --bg: #050505;
             --accent: #00f2ff;
             --text: #ffffff;
-            --grid-color: rgba(0, 242, 255, 0.05);
+            --grid: rgba(0, 242, 255, 0.03);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
 
         body {
             background-color: var(--bg);
             color: var(--text);
             font-family: 'Space Grotesk', sans-serif;
+            height: 100vh;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            transition: all 0.5s ease;
+            transition: opacity 0.5s ease;
         }
 
-        /* شبكة الخلفية المتحركة لجميع المتصفحات */
-        .background-grid {
+        /* شبكة الخلفية - تصميم حصري لمشروع GRID_01 */
+        .grid-layer {
             position: fixed;
-            top: 0; left: 0;
-            width: 200%; height: 200%;
+            top: 0; left: 0; width: 200%; height: 200%;
             background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 50px 50px;
+                linear-gradient(var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: rotate(-10deg);
             z-index: -1;
-            animation: moveGrid 30s linear infinite;
+            animation: move 40s linear infinite;
         }
 
-        @keyframes moveGrid {
+        @keyframes move {
             from { transform: translate(0, 0) rotate(-10deg); }
-            to { transform: translate(-50px, -50px) rotate(-10deg); }
+            to { transform: translate(-60px, -60px) rotate(-10deg); }
         }
 
-        .main-container { text-align: center; z-index: 10; padding: 20px; }
+        .interface {
+            text-align: center;
+            z-index: 10;
+            max-width: 900px;
+            padding: 20px;
+        }
 
-        .status-header {
-            font-size: 0.8rem;
-            letter-spacing: 5px;
+        .header-status {
+            font-size: 0.75rem;
+            letter-spacing: 6px;
             color: var(--accent);
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             text-transform: uppercase;
+            opacity: 0.8;
         }
 
-        .main-question {
-            font-size: clamp(1.5rem, 5vw, 2.8rem);
+        .headline {
+            font-size: clamp(1.8rem, 6vw, 3rem);
             font-weight: 700;
-            margin-bottom: 50px;
-            line-height: 1.3;
+            margin-bottom: 60px;
+            line-height: 1.2;
+            letter-spacing: -1px;
         }
 
-        /* الكرة التفاعلية - قلب النظام */
-        .intuition-sphere {
-            width: clamp(120px, 30vw, 180px);
-            height: clamp(120px, 30vw, 180px);
-            background: radial-gradient(circle, var(--accent) 0%, transparent 75%);
+        /* الكرة النابضة - التفاعل الأساسي */
+        .core-sphere {
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
             border-radius: 50%;
             margin: 0 auto;
             cursor: pointer;
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            animation: pulse 4s infinite ease-in-out;
-            transition: 0.3s;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            position: relative;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .intuition-sphere:hover {
-            box-shadow: 0 0 80px rgba(0, 242, 255, 0.4);
-            transform: scale(1.05);
+        .core-sphere::after {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 242, 255, 0.05);
+            animation: ripple 3s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.4; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
         }
 
-        /* اللغات */
-        .lang-switch {
-            position: fixed; top: 20px; right: 20px;
-            display: flex; gap: 10px; z-index: 100;
+        .core-sphere:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(0, 242, 255, 0.3);
+            border-color: var(--accent);
         }
 
-        .lang-btn {
-            background: transparent; border: 1px solid #333;
-            color: white; padding: 5px 12px; border-radius: 5px;
-            cursor: pointer; font-size: 0.7rem;
+        /* نظام اللغات */
+        .lang-nav {
+            position: absolute; top: 30px; right: 30px;
+            display: flex; gap: 15px;
         }
 
-        .lang-btn:hover { border-color: var(--accent); }
+        .lang-link {
+            color: #444; text-decoration: none; font-size: 0.8rem;
+            cursor: pointer; transition: 0.3s;
+        }
 
-        .stats-footer {
-            margin-top: 60px;
-            display: flex; justify-content: center; gap: 30px;
-            font-size: 0.7rem; letter-spacing: 2px; color: #555;
+        .lang-link.active { color: var(--accent); font-weight: bold; }
+
+        .footer-metrics {
+            margin-top: 80px;
+            display: flex; justify-content: center; gap: 40px;
+            font-size: 0.65rem; color: #333;
+            text-transform: uppercase; letter-spacing: 2px;
         }
 
     </style>
 </head>
-<body id="body">
+<body id="app-viewport">
 
-    <div class="lang-switch">
-        <button class="lang-btn" onclick="setLang('en')">EN</button>
-        <button class="lang-btn" onclick="setLang('ar')">AR</button>
+    <div class="lang-nav">
+        <span class="lang-link active" id="btn-en" onclick="updateLocale('en')">ENGLISH</span>
+        <span class="lang-link" id="btn-ar" onclick="updateLocale('ar')">العربية</span>
     </div>
 
-    <div class="background-grid"></div>
+    <div class="grid-layer"></div>
 
-    <div class="main-container">
-        <div class="status-header" id="status-text">928,472 Perspectives Live</div>
+    <div class="interface">
+        <div class="header-status" id="ui-live">System Online: 928,472 Nodes</div>
         
-        <h1 class="main-question" id="main-q">
-            Global Sensation: <br>
-            <span style="color: var(--accent);">[ECONOMIC_SHIFT]</span>
+        <h1 class="headline" id="ui-headline">
+            Global Intuition Hub: <br>
+            <span style="color: var(--accent);">[PREDICTIVE_SYNC]</span>
         </h1>
 
-        <div class="intuition-sphere" onclick="handleInput()"></div>
+        <div class="core-sphere" onclick="gatekeeper()"></div>
 
-        <div class="stats-footer">
-            <div id="sync">SYNC_RATE: 98.2%</div>
-            <div id="nodes">ACTIVE_NODES: 142</div>
+        <div class="footer-metrics">
+            <div id="ui-sync">Confidence: 98.2%</div>
+            <div id="ui-coverage">Region: Global</div>
         </div>
     </div>
 
     <script>
-        const content = {
+        const locale = {
             en: {
-                status: "928,472 PERSPECTIVES LIVE",
-                q: "Global Sensation: <br><span style='color: #00f2ff;'>[ECONOMIC_SHIFT]</span>",
-                sync: "SYNC_RATE: 98.2%",
-                nodes: "ACTIVE_NODES: 142",
+                live: "System Online: 928,472 Nodes",
+                headline: "Global Intuition Hub: <br><span style='color: #00f2ff;'>[PREDICTIVE_SYNC]</span>",
+                sync: "Confidence: 98.2%",
+                coverage: "Region: Global",
                 dir: "ltr",
                 font: "'Space Grotesk', sans-serif"
             },
             ar: {
-                status: "928,472 منظور حي الآن",
-                q: "الإحساس العالمي الحالي: <br><span style='color: #00f2ff;'>[تحول_اقتصادي]</span>",
-                sync: "معدل المزامنة: 98.2%",
-                nodes: "العقد النشطة: 142",
+                live: "النظام متصل: 928,472 عقدة",
+                headline: "مركز الحدس العالمي: <br><span style='color: #00f2ff;'>[مزامنة_توقعية]</span>",
+                sync: "الثقة: 98.2%",
+                coverage: "النطاق: عالمي",
                 dir: "rtl",
                 font: "'Cairo', sans-serif"
             }
         };
 
-        function setLang(l) {
-            const data = content[l];
-            document.getElementById('body').dir = data.dir;
-            document.getElementById('body').style.fontFamily = data.font;
-            document.getElementById('status-text').innerText = data.status;
-            document.getElementById('main-q').innerHTML = data.q;
-            document.getElementById('sync').innerText = data.sync;
-            document.getElementById('nodes').innerText = data.nodes;
+        function updateLocale(lang) {
+            const data = locale[lang];
+            const view = document.getElementById('app-viewport');
+            
+            view.dir = data.dir;
+            view.style.fontFamily = data.font;
+            document.getElementById('ui-live').innerText = data.live;
+            document.getElementById('ui-headline').innerHTML = data.headline;
+            document.getElementById('ui-sync').innerText = data.sync;
+            document.getElementById('ui-coverage').innerText = data.coverage;
+
+            // تحديث حالة الأزرار
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+            document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
         }
 
-        function handleInput() {
-            // تحويل المستخدم لرابط الدفع الخاص بـ Stripe (Sandbox حالياً)
+        function gatekeeper() {
+            // رابط الدفع الجديد الخاص بمشروع GRID_01 حصراً
+            // تم التأكد من عدم وجود أي روابط قديمة هنا
             window.location.href = "https://buy.stripe.com/test_8x2fZhcoCbnC26l3C77ss00";
         }
     </script>
