@@ -3,99 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GRID_01 | GLOBAL INTUITION</title>
+    <title>GRID_01 | GLOBAL INTUITION SYSTEM</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Cairo:wght@700&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #00f2ff; --bg: #000; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --accent: #00f2ff; --bg: #000; --pos: #00ffcc; --neu: #bd00ff; --neg: #ff4d00; }
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
         
         body { 
             background: var(--bg); color: #fff; 
             font-family: 'Space Grotesk', sans-serif; 
             height: 100vh; overflow: hidden;
             display: flex; align-items: center; justify-content: center;
+            transition: all 0.5s ease;
         }
 
-        /* إصلاح الخلفية الشبكية لتعمل على المتصفح فورا */
+        /* الطبقة الشبكية الخلفية */
         .bg-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(circle at 2px 2px, rgba(0,242,255,0.15) 1px, transparent 0);
+            background-image: radial-gradient(circle at 2px 2px, rgba(0,242,255,0.1) 1px, transparent 0);
             background-size: 40px 40px; z-index: -1;
+            opacity: 0.5;
         }
 
-        .container { text-align: center; width: 100%; padding: 20px; z-index: 10; }
+        .container { text-align: center; width: 100%; max-width: 800px; padding: 20px; z-index: 10; }
 
-        .status { color: var(--accent); font-size: 10px; letter-spacing: 4px; margin-bottom: 20px; opacity: 0.8; }
+        /* العناصر المشتركة */
+        .status { color: var(--accent); font-size: 10px; letter-spacing: 5px; margin-bottom: 25px; text-transform: uppercase; }
+        .title { font-size: clamp(1.5rem, 5vw, 2.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 50px; }
 
-        .title { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 40px; }
-
-        /* الكرة النابضة التي كانت مفقودة في صورتك */
+        /* 1. الواجهة الرئيسية (النواة) */
         .core {
-            width: 140px; height: 140px;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            border: 1px solid rgba(0,242,255,0.3);
+            width: 150px; height: 150px;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 75%);
+            border: 1px solid rgba(0,242,255,0.2);
             border-radius: 50%; margin: 0 auto;
-            animation: pulse 3s infinite ease-in-out;
-            cursor: pointer; box-shadow: 0 0 30px rgba(0,242,255,0.1);
+            animation: pulse 4s infinite ease-in-out;
+            cursor: pointer; transition: 0.3s;
         }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 50px rgba(0,242,255,0.3); } }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 60px rgba(0,242,255,0.4); }
+        /* 2. واجهة خيارات الحدس */
+        .options { display: none; gap: 30px; justify-content: center; animation: slideUp 0.6s ease forwards; }
+        .choice { 
+            width: 90px; height: 90px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            font-size: 9px; font-weight: 700; letter-spacing: 1px; transition: 0.4s;
         }
+        .choice:hover { transform: translateY(-10px) scale(1.1); box-shadow: 0 15px 30px currentColor; }
+        .pos { background: rgba(0, 255, 204, 0.15); color: var(--pos); }
+        .neu { background: rgba(189, 0, 255, 0.15); color: var(--neu); }
+        .neg { background: rgba(255, 77, 0, 0.15); color: var(--neg); }
 
-        .lang-switch { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; }
-        .lang-btn { background: none; border: 1px solid #333; color: #fff; padding: 5px 10px; font-size: 10px; cursor: pointer; }
+        /* 3. لوحة النتائج (الداشبورد) */
+        .dashboard { display: none; flex-direction: column; align-items: center; animation: fadeIn 1s ease; }
+        .gauge-row { display: flex; justify-content: space-around; width: 100%; margin: 40px 0; }
+        .gauge { text-align: center; flex: 1; }
+        .bar-wrap { width: 12px; height: 160px; background: rgba(255,255,255,0.03); margin: 15px auto; position: relative; border-radius: 10px; overflow: hidden; }
+        .fill-bar { position: absolute; bottom: 0; width: 100%; height: 0; transition: height 2s cubic-bezier(0.19, 1, 0.22, 1); }
+        .val { font-size: 1.4rem; font-weight: 700; color: #fff; }
+        .lbl { font-size: 0.6rem; color: #555; letter-spacing: 2px; margin-top: 10px; }
 
-        .options { display: none; gap: 20px; justify-content: center; margin-top: 20px; animation: slideUp 0.5s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* مفتاح اللغات */
+        .lang-nav { position: fixed; top: 30px; right: 30px; display: flex; gap: 15px; }
+        .l-btn { background: none; border: 1px solid #222; color: #444; padding: 6px 12px; font-size: 10px; cursor: pointer; transition: 0.3s; }
+        .l-btn.active { color: var(--accent); border-color: var(--accent); }
 
-        .choice { width: 70px; height: 70px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; }
-        .pos { background: rgba(0, 255, 204, 0.2); color: #00ffcc; }
-        .neu { background: rgba(189, 0, 255, 0.2); color: #bd00ff; }
-        .neg { background: rgba(255, 77, 0, 0.2); color: #ff4d00; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body id="mainBody">
 
     <div class="bg-layer"></div>
 
-    <div class="lang-switch">
-        <button class="lang-btn" onclick="toggleLang('en')">EN</button>
-        <button class="lang-btn" onclick="toggleLang('ar')">AR</button>
+    <div class="lang-nav">
+        <button class="l-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+        <button class="l-btn" id="btn-ar" onclick="setLang('ar')">AR</button>
     </div>
 
     <div class="container">
-        <div id="core-view">
-            <p class="status" id="status-txt">NODES ACTIVE: 928,472</p>
-            <h1 class="title" id="title-txt">COLLECTIVE INTUITION:<br><span style="color:var(--accent)">[SYSTEM_READY]</span></h1>
-            <div class="core" onclick="showOptions()"></div>
+        <div id="view-1">
+            <p class="status" id="st-1">NODES ACTIVE: 928,472</p>
+            <h1 class="title" id="tt-1">COLLECTIVE INTUITION:<br><span style="color:var(--accent)">[SYSTEM_READY]</span></h1>
+            <div class="core" onclick="toOptions()"></div>
         </div>
 
-        <div class="options" id="opt-view">
-            <div class="choice pos" onclick="finish('Positive')">STABLE</div>
-            <div class="choice neu" onclick="finish('Neutral')">UNCERTAIN</div>
-            <div class="choice neg" onclick="finish('Volatile')">VOLATILE</div>
+        <div class="options" id="view-2">
+            <div class="choice pos" onclick="toDash('Positive')">STABLE</div>
+            <div class="choice neu" onclick="toDash('Neutral')">UNCERTAIN</div>
+            <div class="choice neg" onclick="toDash('Volatile')">VOLATILE</div>
+        </div>
+
+        <div class="dashboard" id="view-3">
+            <p class="status" id="st-3">GLOBAL PULSE ANALYSIS</p>
+            <div class="gauge-row">
+                <div class="gauge">
+                    <div class="val" id="v1">64%</div>
+                    <div class="bar-wrap"><div class="fill-bar" id="f1" style="background:var(--pos)"></div></div>
+                    <div class="lbl" id="lb1">STABLE</div>
+                </div>
+                <div class="gauge">
+                    <div class="val" id="v2">21%</div>
+                    <div class="bar-wrap"><div class="fill-bar" id="f2" style="background:var(--neu)"></div></div>
+                    <div class="lbl" id="lb2">UNCERTAIN</div>
+                </div>
+                <div class="gauge">
+                    <div class="val" id="v3">15%</div>
+                    <div class="bar-wrap"><div class="fill-bar" id="f3" style="background:var(--neg)"></div></div>
+                    <div class="lbl" id="lb3">VOLATILE</div>
+                </div>
+            </div>
+            <p style="font-size:10px; color:#333; letter-spacing:3px;">NETWORK SYNC: 100% SUCCESSFUL</p>
         </div>
     </div>
 
     <script>
-        function toggleLang(l) {
+        let currentL = 'en';
+
+        function setLang(l) {
+            currentL = l;
             const isAr = l === 'ar';
             document.getElementById('mainBody').dir = isAr ? 'rtl' : 'ltr';
             document.getElementById('mainBody').style.fontFamily = isAr ? 'Cairo' : 'Space Grotesk';
-            document.getElementById('status-txt').innerText = isAr ? "العقد النشطة: 928,472" : "NODES ACTIVE: 928,472";
-            document.getElementById('title-txt').innerHTML = isAr ? "الحدس الجماعي:<br><span style='color:#00f2ff'>[النظام_جاهز]</span>" : "COLLECTIVE INTUITION:<br><span style='color:#00f2ff'>[SYSTEM_READY]</span>";
+            
+            // تحديث النصوص
+            document.getElementById('st-1').innerText = isAr ? "العقد النشطة: 928,472" : "NODES ACTIVE: 928,472";
+            document.getElementById('tt-1').innerHTML = isAr ? "الحدس الجماعي:<br><span style='color:var(--accent)'>[النظام_جاهز]</span>" : "COLLECTIVE INTUITION:<br><span style='color:var(--accent)'>[SYSTEM_READY]</span>";
+            document.getElementById('st-3').innerText = isAr ? "تحليل النبض العالمي" : "GLOBAL PULSE ANALYSIS";
+            document.getElementById('lb1').innerText = isAr ? "مستقر" : "STABLE";
+            document.getElementById('lb2').innerText = isAr ? "غير مؤكد" : "UNCERTAIN";
+            document.getElementById('lb3').innerText = isAr ? "مضطرب" : "VOLATILE";
+
+            // تحديث الأزرار
+            document.getElementById('btn-en').classList.toggle('active', l === 'en');
+            document.getElementById('btn-ar').classList.toggle('active', l === 'ar');
         }
 
-        function showOptions() {
-            document.getElementById('core-view').style.display = 'none';
-            document.getElementById('opt-view').style.display = 'flex';
+        function toOptions() {
+            document.getElementById('view-1').style.display = 'none';
+            document.getElementById('view-2').style.display = 'flex';
         }
 
-        function finish(type) {
-            alert("Intuition Recorded: " + type);
-            location.reload();
+        function toDash(type) {
+            document.getElementById('view-2').style.display = 'none';
+            document.getElementById('view-3').style.display = 'flex';
+            
+            // تحريك الأعمدة بعد ظهور اللوحة
+            setTimeout(() => {
+                document.getElementById('f1').style.height = '64%';
+                document.getElementById('f2').style.height = '21%';
+                document.getElementById('f3').style.height = '15%';
+            }, 200);
         }
     </script>
 </body>
