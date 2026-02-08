@@ -3,219 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Global Cyber Globe 3D</title>
-    
-    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
-    <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
-
+    <title>Global Data Link - Universal Edition</title>
     <style>
         :root {
             --neon: #00f2ff;
             --purple: #7000ff;
-            --bg: #010508;
-            --glass: rgba(6, 11, 19, 0.8);
+            --dark: #050a0f;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; overflow: hidden; }
-
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
-
-        /* واجهة المستخدم العلوية */
-        .header-interface {
-            position: absolute;
-            top: 20px; left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            width: 90%;
-            max-width: 850px;
-            pointer-events: none;
-        }
-
-        .control-grid {
-            background: var(--glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            border-radius: 12px;
-            padding: 15px;
-            pointer-events: auto;
+        
+        body { 
+            background: var(--dark); 
+            color: white; 
+            font-family: sans-serif; 
+            overflow: hidden; 
+            height: 100vh;
             display: flex;
-            gap: 10px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            flex-direction: column;
         }
 
-        input, button {
-            background: rgba(0,0,0,0.6);
-            border: 1px solid var(--neon);
-            color: var(--neon);
-            padding: 12px;
-            border-radius: 6px;
-            outline: none;
-            font-size: 13px;
+        /* حاوية الخريطة - متجاوبة تماماً */
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+            background: radial-gradient(circle, #0a192f 0%, #050a0f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* صورة الخريطة كخلفية SVG لضمان الدقة والخفة */
+        .world-map {
+            width: 90%;
+            max-width: 1000px;
+            height: auto;
+            opacity: 0.3;
+            filter: drop-shadow(0 0 10px var(--neon));
+        }
+
+        /* واجهة الأوامر - تصميم مرن */
+        .controls {
+            background: rgba(10, 20, 30, 0.95);
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-top: 1px solid var(--neon);
+            z-index: 100;
+        }
+
+        input {
             flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            background: #000;
+            border: 1px solid #333;
+            color: var(--neon);
+            border-radius: 5px;
+            outline: none;
         }
 
         button {
-            background: linear-gradient(45deg, var(--neon), var(--purple));
-            color: white;
+            padding: 12px 25px;
+            background: var(--neon);
+            color: #000;
             border: none;
-            cursor: pointer;
+            border-radius: 5px;
             font-weight: bold;
-            text-transform: uppercase;
-            max-width: 150px;
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        button:hover { filter: brightness(1.2); box-shadow: 0 0 15px var(--neon); }
+        button:hover { background: white; box-shadow: 0 0 20px var(--neon); }
 
-        /* سجل النشاط الجانبي */
-        .terminal-log {
+        /* الأيقونات والنقاط */
+        .node {
             position: absolute;
-            bottom: 25px; right: 20px;
-            width: 260px;
-            background: var(--glass);
-            border-right: 4px solid var(--neon);
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            z-index: 10;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .marker-point {
-            width: 10px; height: 10px;
+            width: 8px;
+            height: 8px;
             background: var(--neon);
             border-radius: 50%;
             box-shadow: 0 0 15px var(--neon);
+        }
+
+        .node-label {
+            position: absolute;
+            font-size: 10px;
+            margin-top: 10px;
+            transform: translateX(-30%);
+            white-space: nowrap;
+            color: #aaa;
+        }
+
+        /* خط الإرسال */
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon), var(--purple));
+            transform-origin: left center;
+            z-index: 5;
+            display: none;
+            box-shadow: 0 0 10px var(--neon);
+        }
+
+        @media (max-width: 600px) {
+            input { font-size: 12px; padding: 8px; }
+            button { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-<div id="map"></div>
-
-<div class="header-interface">
-    <div class="control-grid">
-        <input type="number" id="fromID" placeholder="ID المرسل">
-        <input type="number" id="toID" placeholder="ID المستقبل">
-        <input type="text" id="msgText" placeholder="أدخل البيانات المراد تشفيرها...">
-        <button onclick="startTransmission()">نقل البيانات</button>
-    </div>
+<div id="map-container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_blank_without_borders.svg" class="world-map" alt="World Map">
+    
+    <div id="nodes-layer"></div>
+    <div id="line" class="connection-line"></div>
 </div>
 
-<div class="terminal-log" id="terminal">> النظام الكروي متصل...</div>
+<div class="controls">
+    <input type="number" id="sID" placeholder="ID المرسل (1-5)">
+    <input type="number" id="rID" placeholder="ID المستقبل (1-5)">
+    <input type="text" id="msg" placeholder="اكتب رسالتك...">
+    <button onclick="animateTransfer()">إرسال فوري</button>
+</div>
 
 <script>
-    // تهيئة الكرة الأرضية الحقيقية (Globe)
-    const map = new maplibregl.Map({
-        container: 'map',
-        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-        center: [38.06, 24.08], // البداية من موقعك (ينبع)
-        zoom: 2,
-        pitch: 45,
-        antialias: true
-    });
-
-    // تفعيل وضع الكرة الأرضية الحقيقي
-    map.on('style.load', () => {
-        map.setProjection({ type: 'globe' });
-    });
-
+    // توزيع النقاط بنسب مئوية لضمان ثباتها على أي حجم شاشة
     const users = {
-        "1": { name: "ينبع (أنت)", coords: [38.0618, 24.0889] },
-        "2": { name: "لندن", coords: [-0.1278, 51.5074] },
-        "3": { name: "نيويورك", coords: [-74.0060, 40.7128] },
-        "4": { name: "طوكيو", coords: [139.6503, 35.6762] },
-        "5": { name: "باريس", coords: [2.3522, 48.8566] }
+        "1": { name: "ينبع", x: 62, y: 45 },
+        "2": { name: "لندن", x: 48, y: 25 },
+        "3": { name: "نيويورك", x: 25, y: 35 },
+        "4": { name: "طوكيو", x: 85, y: 40 },
+        "5": { name: "سيدني", x: 88, y: 80 }
     };
 
-    // وضع نقاط المستخدمين
-    Object.values(users).forEach(u => {
-        const el = document.createElement('div');
-        el.className = 'marker-point';
-        new maplibregl.Marker(el).setLngLat(u.coords).addTo(map);
+    // رسم النقاط عند التحميل
+    const layer = document.getElementById('nodes-layer');
+    Object.keys(users).forEach(id => {
+        const u = users[id];
+        const dot = document.createElement('div');
+        dot.className = 'node';
+        dot.style.left = u.x + '%';
+        dot.style.top = u.y + '%';
+        dot.innerHTML = `<div class="node-label">ID: ${id} - ${u.name}</div>`;
+        layer.appendChild(dot);
     });
 
-    function log(t) {
-        const term = document.getElementById('terminal');
-        term.innerHTML += `<div>> ${t}</div>`;
-        term.scrollTop = term.scrollHeight;
-    }
-
-    function startTransmission() {
-        const sID = document.getElementById('fromID').value;
-        const rID = document.getElementById('toID').value;
-        const msg = document.getElementById('msgText').value || "Encrypted_File";
-
-        if(!users[sID] || !users[rID]) {
-            log("<span style='color:#ff4d4d'>خطأ: ID غير صالح</span>");
+    function animateTransfer() {
+        const s = document.getElementById('sID').value;
+        const r = document.getElementById('rID').value;
+        
+        if (!users[s] || !users[r]) {
+            alert("يرجى إدخال ID من 1 إلى 5");
             return;
         }
 
-        const start = users[sID].coords;
-        const end = users[rID].coords;
+        const start = users[s];
+        const end = users[r];
+        const line = document.getElementById('line');
+        const container = document.getElementById('map-container');
 
-        log(`بدء الاتصال بين ${users[sID].name} و ${users[rID].name}`);
+        // حساب الإحداثيات بالبكسل بناءً على حجم الشاشة الحالي
+        const x1 = (start.x / 100) * container.offsetWidth;
+        const y1 = (start.y / 100) * container.offsetHeight;
+        const x2 = (end.x / 100) * container.offsetWidth;
+        const y2 = (end.y / 100) * container.offsetHeight;
 
-        // تحريك الكاميرا في فضاء الكرة الأرضية
-        map.flyTo({ center: start, zoom: 3, speed: 1, curve: 1.5 });
+        const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
 
-        // إضافة مصدر الخط
-        const lineId = 'route-' + Date.now();
-        map.addSource(lineId, {
-            'type': 'geojson',
-            'data': {
-                'type': 'Feature',
-                'geometry': { 'type': 'LineString', 'coordinates': [start, start] }
-            }
-        });
+        // إعداد الخط
+        line.style.display = 'block';
+        line.style.width = '0px';
+        line.style.left = x1 + 'px';
+        line.style.top = y1 + 'px';
+        line.style.transform = `rotate(${angle}deg)`;
 
-        map.addLayer({
-            'id': lineId,
-            'type': 'line',
-            'source': lineId,
-            'paint': {
-                'line-color': '#00f2ff',
-                'line-width': 2.5,
-                'line-dasharray': [2, 1]
-            }
-        });
-
-        let progress = 0;
-        function animateLine() {
-            progress += 0.015;
-            if (progress <= 1) {
-                const lng = start[0] + (end[0] - start[0]) * progress;
-                const lat = start[1] + (end[1] - start[1]) * progress;
-                
-                map.getSource(lineId).setData({
-                    'type': 'Feature',
-                    'geometry': { 'type': 'LineString', 'coordinates': [start, [lng, lat]] }
-                });
-                requestAnimationFrame(animateLine);
+        // تحريك الخط (Animation) متوافق مع كل المتصفحات
+        let currentWidth = 0;
+        const anim = setInterval(() => {
+            currentWidth += distance / 50;
+            if (currentWidth >= distance) {
+                line.style.width = distance + 'px';
+                clearInterval(anim);
+                setTimeout(() => { line.style.display = 'none'; }, 2000);
             } else {
-                log(`تم استلام: <span style="color:#00f2ff">${msg}</span>`);
-                map.setPaintProperty(lineId, 'line-color', '#7000ff');
-                map.flyTo({ center: end, zoom: 3, duration: 2000 });
+                line.style.width = currentWidth + 'px';
             }
-        }
-        animateLine();
+        }, 10);
     }
-
-    // إضافة دوران بسيط للكرة عند عدم التفاعل
-    let isSpinning = true;
-    function spinGlobe() {
-        if (isSpinning) {
-            const center = map.getCenter();
-            center.lng += 0.1;
-            map.setCenter(center);
-            requestAnimationFrame(spinGlobe);
-        }
-    }
-    spinGlobe();
-    map.on('mousedown', () => isSpinning = false);
 </script>
 
 </body>
