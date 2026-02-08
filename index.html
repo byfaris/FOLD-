@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GRID_01 | GLOBAL INTUITION HUB</title>
+    <title>GRID_01 | LIVE GLOBAL HUB</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Cairo:wght@700&display=swap" rel="stylesheet">
     
     <script src="https://unpkg.com/three"></script>
@@ -36,6 +36,8 @@
 
         #map-legend { display: none; position: fixed; bottom: 40px; width: 100%; justify-content: center; gap: 25px; font-size: 9px; z-index: 100; }
         .hidden { display: none !important; }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body id="mainBody">
@@ -64,9 +66,9 @@
     </div>
 
     <div id="map-legend">
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--pos)"></div> <span id="lb1">STABLE</span></div>
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--neu)"></div> <span id="lb2">UNCERTAIN</span></div>
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--neg)"></div> <span id="lb3">VOLATILE</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--pos); box-shadow: 0 0 10px var(--pos);"></div> <span id="lb1">STABLE</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--neu); box-shadow: 0 0 10px var(--neu);"></div> <span id="lb2">UNCERTAIN</span></div>
+        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--neg); box-shadow: 0 0 10px var(--neg);"></div> <span id="lb3">VOLATILE</span></div>
     </div>
 
     <script type="module">
@@ -86,7 +88,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // جعل Firebase متاحاً عالمياً للوظائف الأخرى
+        // جعل الأدوات متاحة للسكربت التقليدي
         window.db = db;
         window.fbRef = ref;
         window.fbOnValue = onValue;
@@ -117,7 +119,7 @@
         }
 
         async function handleVote(choice) {
-            // محاكاة كود الدولة (يمكن جلبها عبر IP لاحقاً)
+            // كود الدولة الافتراضي للسعودية (يمكنك تغييره أو جعله ديناميكياً)
             const countryCode = "SA"; 
             
             if(window.db) {
@@ -140,9 +142,9 @@
                 .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
                 .showAtmosphere(true)
                 .atmosphereColor('#00f2ff')
-                .atmosphereDaylightAlpha(0.1);
+                .atmosphereDaylightAlpha(0.15);
 
-            // المزامنة الحية مع Firebase
+            // المزامنة الحية مع قاعدة بياناتك الحقيقية
             window.fbOnValue(window.fbRef(window.db, 'countries'), (snapshot) => {
                 const data = snapshot.val() || {};
                 fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
@@ -151,16 +153,18 @@
                         world.polygonsData(countries.features)
                             .polygonCapColor(d => {
                                 const stats = data[d.properties.ISO_A2];
-                                if (!stats) return 'rgba(255,255,255,0.05)';
+                                if (!stats) return 'rgba(0, 242, 255, 0.05)';
+                                
                                 const max = Math.max(stats.stable, stats.uncertain, stats.volatile);
-                                if (max === stats.stable) return 'rgba(0, 255, 204, 0.4)';
-                                if (max === stats.uncertain) return 'rgba(189, 0, 255, 0.4)';
-                                return 'rgba(255, 77, 0, 0.4)';
+                                if (max === 0) return 'rgba(0, 242, 255, 0.05)';
+                                if (max === stats.stable) return 'rgba(0, 255, 204, 0.6)';
+                                if (max === stats.uncertain) return 'rgba(189, 0, 255, 0.6)';
+                                return 'rgba(255, 77, 0, 0.6)';
                             })
                             .polygonStrokeColor(() => 'rgba(0, 242, 255, 0.3)')
                             .polygonLabel(({ properties: d }) => `
-                                <div style="background:rgba(0,0,0,0.8); padding:8px; border:1px solid var(--accent); font-size:10px;">
-                                    ${d.NAME}
+                                <div style="background:rgba(0,0,0,0.9); padding:10px; border:1px solid var(--accent); border-radius:4px; font-family:sans-serif;">
+                                    <b style="color:var(--accent)">${d.NAME}</b>
                                 </div>
                             `);
                     });
