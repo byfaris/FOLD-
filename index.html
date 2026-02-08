@@ -3,200 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE PULSE // نبض العالم</title>
+    <title>خريطة إرسال البيانات العالمية</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root {
-            --bg: #030303;
-            --accent: #00ff88;
-        }
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background: var(--bg);
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
-            overflow: hidden;
-        }
-
-        /* الطبقة الأساسية للنبض */
-        #pulse-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            z-index: 1;
-        }
-
-        /* واجهة المعلومات */
-        .overlay {
-            position: relative;
-            z-index: 10;
-            padding: 40px;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            pointer-events: none;
-        }
-
-        .header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .data-stream { font-size: 12px; color: var(--accent); letter-spacing: 2px; }
-
-        .center-text {
-            text-align: center;
-            mix-blend-mode: difference;
-        }
-        h1 {
-            font-size: 8vw;
-            margin: 0;
-            letter-spacing: -5px;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .control-unit {
-            pointer-events: auto;
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 20px;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-            max-width: 300px;
-        }
-
-        .stat-bar {
-            height: 2px;
-            background: rgba(255,255,255,0.1);
-            margin: 10px 0;
-            position: relative;
-        }
-        .stat-progress {
-            position: absolute;
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 2s ease;
-        }
-
-        /* تأثيرات النيون */
-        .glow-text {
-            text-shadow: 0 0 10px var(--accent);
-        }
+        body { margin: 0; font-family: sans-serif; background: #1a1a1a; color: white; }
+        #map { height: 70vh; width: 100%; background: #0b141a; }
+        .controls { padding: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; background: #222; }
+        input { padding: 10px; border-radius: 5px; border: none; width: 150px; }
+        button { padding: 10px 20px; border-radius: 5px; border: none; background: #2ecc71; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background: #27ae60; }
+        .status { text-align: center; padding: 10px; color: #f1c40f; }
     </style>
 </head>
 <body>
 
-    <canvas id="pulse-canvas"></canvas>
+<div id="map"></div>
 
-    <div class="overlay">
-        <div class="header">
-            <div class="data-stream">
-                LIVE_FEED: <span id="feed-status">SCANNING...</span><br>
-                VOLATILITY: <span id="v-index">0.00%</span>
-            </div>
-            <div class="data-stream">
-                [ LAT: <span id="lat">--</span> ]<br>
-                [ LNG: <span id="lng">--</span> ]
-            </div>
-        </div>
+<div class="controls">
+    <input type="text" id="senderID" placeholder="ID المرسل (مثلاً: 1)">
+    <input type="text" id="receiverID" placeholder="ID المستقبل (مثلاً: 2)">
+    <input type="text" id="message" placeholder="اكتب رسالتك هنا...">
+    <button onclick="sendData()">إرسال البيانات</button>
+</div>
+<div id="status" class="status">جاهز للإرسال...</div>
 
-        <div class="center-text">
-            <h1 class="glow-text">PULSE</h1>
-            <p style="opacity: 0.5;">تجربة رقمية حية تعتمد على عشوائية البيانات العالمية</p>
-        </div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // إعداد الخريطة بتصميم ليلي
+    const map = L.map('map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
 
-        <div class="footer">
-            <div class="control-unit">
-                <div style="font-size: 10px; margin-bottom: 10px;">GLOBAL_ACTIVITY_INDEX</div>
-                <div class="stat-bar"><div class="stat-progress" id="p1"></div></div>
-                <div class="stat-bar"><div class="stat-progress" id="p2"></div></div>
-                <button onclick="changeFrequency()" style="background: var(--accent); border: none; padding: 5px 15px; cursor: pointer; margin-top: 10px; font-weight: bold;">ADJUST FREQUENCY</button>
-            </div>
-            <div style="text-align: left; font-size: 10px; opacity: 0.3;">
-                UNREPLICABLE_ALGORITHM_V4.0<br>
-                DESIGNED BY FARIS_BOT
-            </div>
-        </div>
-    </div>
+    // قاعدة بيانات وهمية لمواقع المستخدمين بناءً على الـ ID
+    const users = {
+        "1": { name: "فارس", coords: [24.0889, 38.0618] }, // ينبع
+        "2": { name: "لندن", coords: [51.5074, -0.1278] },
+        "3": { name: "نيويورك", coords: [40.7128, -74.0060] },
+        "4": { name: "طوكيو", coords: [35.6762, 139.6503] },
+        "5": { name: "سيدني", coords: [-33.8688, 151.2093] }
+    };
 
-    <script>
-        const canvas = document.getElementById('pulse-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height, particles = [];
-        let globalPulse = 0.5; // يتغير بناءً على الـ "نبض"
+    // إضافة علامات للمستخدمين على الخريطة
+    Object.keys(users).forEach(id => {
+        L.circleMarker(users[id].coords, {
+            color: '#3498db',
+            radius: 8,
+            fillOpacity: 0.8
+        }).addTo(map).bindPopup(`ID: ${id} - ${users[id].name}`);
+    });
 
-        function init() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            particles = [];
-            for(let i=0; i<100; i++) {
-                particles.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    r: Math.random() * 2 + 1,
-                    speed: Math.random() * 2 + 0.5
-                });
+    function sendData() {
+        const sID = document.getElementById('senderID').value;
+        const rID = document.getElementById('receiverID').value;
+        const msg = document.getElementById('message').value;
+
+        if (!users[sID] || !users[rID]) {
+            alert("يرجى إدخال ID صحيح (من 1 إلى 5)");
+            return;
+        }
+
+        const start = users[sID].coords;
+        const end = users[rID].coords;
+
+        // رسم الخط الأساسي (باهت)
+        const line = L.polyline([start, end], {color: '#444', weight: 2, dashArray: '5, 10'}).addTo(map);
+
+        // إنشاء تأثير "النبضة" أو تلوين الخط المتحرك
+        let count = 0;
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerText = `جاري إرسال: "${msg}" من ${users[sID].name} إلى ${users[rID].name}...`;
+
+        // مصفوفة النقاط للتحريك
+        const animatedLine = L.polyline([start, start], {color: '#2ecc71', weight: 4}).addTo(map);
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 0.02; // سرعة الحركة
+            if (progress >= 1) {
+                clearInterval(interval);
+                animatedLine.setLatLngs([start, end]);
+                statusDiv.innerText = "تم وصول الرسالة بنجاح! ✅";
+                setTimeout(() => {
+                    map.removeLayer(animatedLine);
+                    map.removeLayer(line);
+                }, 2000);
+            } else {
+                const currentLat = start[0] + (end[0] - start[0]) * progress;
+                const currentLng = start[1] + (end[1] - start[1]) * progress;
+                animatedLine.setLatLngs([start, [currentLat, currentLng]]);
             }
-        }
+        }, 20);
+    }
+</script>
 
-        function draw() {
-            ctx.fillStyle = 'rgba(3, 3, 3, 0.1)'; // تأثير التلاشي
-            ctx.fillRect(0, 0, width, height);
-
-            particles.forEach(p => {
-                ctx.beginPath();
-                // رسم الخطوط المتصلة بناءً على "النبض"
-                ctx.strokeStyle = `rgba(0, 255, 136, ${globalPulse * 0.2})`;
-                ctx.lineWidth = 0.5;
-                particles.forEach(p2 => {
-                    let d = Math.hypot(p.x - p2.x, p.y - p2.y);
-                    if(d < 150 * globalPulse) {
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p2.x, p2.y);
-                    }
-                });
-                ctx.stroke();
-
-                ctx.fillStyle = '#00ff88';
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-                ctx.fill();
-
-                p.y -= p.speed * globalPulse;
-                if(p.y < 0) p.y = height;
-            });
-
-            requestAnimationFrame(draw);
-        }
-
-        // محاكاة سحب البيانات الحية
-        function updatePulse() {
-            globalPulse = Math.random() * 2; // في الواقع يتم ربطها بـ API
-            document.getElementById('v-index').innerText = (globalPulse * 54.2).toFixed(2) + "%";
-            document.getElementById('feed-status').innerText = globalPulse > 1.2 ? "HIGH_ACTIVITY" : "STABLE_STREAM";
-            
-            document.getElementById('p1').style.width = Math.random() * 100 + "%";
-            document.getElementById('p2').style.width = Math.random() * 100 + "%";
-        }
-
-        function changeFrequency() {
-            const colors = ['#00ff88', '#ff0055', '#00f2ff', '#ffaa00'];
-            const newColor = colors[Math.floor(Math.random() * colors.length)];
-            document.documentElement.style.setProperty('--accent', newColor);
-        }
-
-        // تحديد الموقع
-        navigator.geolocation.getCurrentPosition(pos => {
-            document.getElementById('lat').innerText = pos.coords.latitude.toFixed(2);
-            document.getElementById('lng').innerText = pos.coords.longitude.toFixed(2);
-        });
-
-        window.onresize = init;
-        setInterval(updatePulse, 3000);
-        init();
-        draw();
-    </script>
 </body>
 </html>
