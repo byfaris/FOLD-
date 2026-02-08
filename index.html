@@ -3,248 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE ENTITY // المشروع المستحيل</title>
+    <title>THE PULSE // نبض العالم</title>
     <style>
         :root {
-            --glow: #00f2ff;
-            --bg: #050505;
+            --bg: #030303;
+            --accent: #00ff88;
         }
-
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg);
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             overflow: hidden;
         }
 
-        /* الطبقة التفاعلية */
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* الطبقة الأساسية للنبض */
+        #pulse-canvas {
+            position: fixed;
+            top: 0; left: 0;
             z-index: 1;
         }
 
-        /* الواجهة الأمامية */
-        .ui-overlay {
+        /* واجهة المعلومات */
+        .overlay {
             position: relative;
             z-index: 10;
+            padding: 40px;
             height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 40px;
             pointer-events: none;
-            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.8) 100%);
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .data-stream { font-size: 12px; color: var(--accent); letter-spacing: 2px; }
 
-        .system-status {
-            font-size: 12px;
-            letter-spacing: 2px;
-            color: var(--glow);
-            text-transform: uppercase;
+        .center-text {
+            text-align: center;
+            mix-blend-mode: difference;
         }
-
-        .main-content {
-            max-width: 600px;
-        }
-
         h1 {
-            font-size: clamp(2rem, 8vw, 5rem);
+            font-size: 8vw;
             margin: 0;
-            line-height: 0.9;
-            text-transform: uppercase;
+            letter-spacing: -5px;
             font-weight: 900;
-            background: linear-gradient(to bottom, #fff, #444);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .description {
-            font-size: 18px;
-            margin-top: 20px;
-            color: #888;
-            line-height: 1.6;
-            pointer-events: auto;
+            text-transform: uppercase;
         }
 
         .footer {
             display: flex;
             justify-content: space-between;
-            font-size: 10px;
-            color: #444;
-            letter-spacing: 5px;
+            align-items: flex-end;
         }
 
-        .interactive-btn {
+        .control-unit {
             pointer-events: auto;
-            background: transparent;
-            border: 1px solid var(--glow);
-            color: var(--glow);
-            padding: 15px 30px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 30px;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 20px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            max-width: 300px;
         }
 
-        .interactive-btn:hover {
-            background: var(--glow);
-            color: black;
-            box-shadow: 0 0 30px var(--glow);
-        }
-
-        /* تأثير التشويش (Glitch) */
-        .glitch {
+        .stat-bar {
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            margin: 10px 0;
             position: relative;
         }
-        
-        .glitch::before {
-            content: attr(data-text);
+        .stat-progress {
             position: absolute;
-            left: -2px;
-            text-shadow: 2px 0 red;
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim 5s infinite linear alternate-reverse;
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 2s ease;
         }
 
-        @keyframes glitch-anim {
-            0% { clip: rect(31px, 9999px, 94px, 0); }
-            20% { clip: rect(62px, 9999px, 42px, 0); }
-            /* ... استمرار التأثير ... */
-            100% { clip: rect(89px, 9999px, 98px, 0); }
+        /* تأثيرات النيون */
+        .glow-text {
+            text-shadow: 0 0 10px var(--accent);
         }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas"></canvas>
+    <canvas id="pulse-canvas"></canvas>
 
-    <div class="ui-overlay">
+    <div class="overlay">
         <div class="header">
-            <div class="system-status">System: <span id="clock">00:00:00</span> // Active</div>
-            <div class="system-status">Core: Organic_Intelligence_v1</div>
+            <div class="data-stream">
+                LIVE_FEED: <span id="feed-status">SCANNING...</span><br>
+                VOLATILITY: <span id="v-index">0.00%</span>
+            </div>
+            <div class="data-stream">
+                [ LAT: <span id="lat">--</span> ]<br>
+                [ LNG: <span id="lng">--</span> ]
+            </div>
         </div>
 
-        <div class="main-content">
-            <h1 class="glitch" data-text="BEYOND AI">BEYOND AI</h1>
-            <p class="description">
-                هذا الموقع ليس مجرد كود ثابت؛ إنه نسيج رياضي من خوارزميات الـ Flow Fields. 
-                كل جسيم تراه يتحرك بناءً على معادلات Perlin Noise التي تولد فوضى منظمة، 
-                لا يمكن توقع مسارها أو تكرارها بدقة.
-            </p>
-            <button class="interactive-btn" onclick="changeMode()">إعادة توليد النسيج</button>
+        <div class="center-text">
+            <h1 class="glow-text">PULSE</h1>
+            <p style="opacity: 0.5;">تجربة رقمية حية تعتمد على عشوائية البيانات العالمية</p>
         </div>
 
         <div class="footer">
-            <div>COORDINATES: <span id="coords">0.0, 0.0</span></div>
-            <div>STATUS: UNREPLICABLE</div>
+            <div class="control-unit">
+                <div style="font-size: 10px; margin-bottom: 10px;">GLOBAL_ACTIVITY_INDEX</div>
+                <div class="stat-bar"><div class="stat-progress" id="p1"></div></div>
+                <div class="stat-bar"><div class="stat-progress" id="p2"></div></div>
+                <button onclick="changeFrequency()" style="background: var(--accent); border: none; padding: 5px 15px; cursor: pointer; margin-top: 10px; font-weight: bold;">ADJUST FREQUENCY</button>
+            </div>
+            <div style="text-align: left; font-size: 10px; opacity: 0.3;">
+                UNREPLICABLE_ALGORITHM_V4.0<br>
+                DESIGNED BY FARIS_BOT
+            </div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('pulse-canvas');
         const ctx = canvas.getContext('2d');
-        let particles = [];
-        let width, height;
-        let hue = 180;
-
-        class Particle {
-            constructor() {
-                this.reset();
-            }
-
-            reset() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
-                this.life = Math.random() * 100 + 100;
-                this.acc = 0.05;
-            }
-
-            update(mouse) {
-                // الربط مع الماوس لخلق "الجاذبية العكسية"
-                let dx = mouse.x - this.x;
-                let dy = mouse.y - this.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if (dist < 150) {
-                    this.vx -= dx / dist * 0.5;
-                    this.vy -= dy / dist * 0.5;
-                }
-
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life--;
-
-                if (this.life <= 0 || this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
-                    this.reset();
-                }
-            }
-
-            draw() {
-                ctx.fillStyle = `hsla(${hue}, 100%, 50%, ${this.life / 200})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 1.2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+        let width, height, particles = [];
+        let globalPulse = 0.5; // يتغير بناءً على الـ "نبض"
 
         function init() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
             particles = [];
-            for (let i = 0; i < 500; i++) {
-                particles.push(new Particle());
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    r: Math.random() * 2 + 1,
+                    speed: Math.random() * 2 + 0.5
+                });
             }
         }
 
-        const mouse = { x: -1000, y: -1000 };
-        window.onmousemove = (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-            document.getElementById('coords').innerText = `${mouse.x.toFixed(1)}, ${mouse.y.toFixed(1)}`;
-        };
-
-        function animate() {
-            // سر الجمال هنا: لا نمسح الشاشة بالكامل بل نضع طبقة شفافة لخلق تأثير "الذيول"
-            ctx.fillStyle = 'rgba(5, 5, 5, 0.05)';
+        function draw() {
+            ctx.fillStyle = 'rgba(3, 3, 3, 0.1)'; // تأثير التلاشي
             ctx.fillRect(0, 0, width, height);
 
             particles.forEach(p => {
-                p.update(mouse);
-                p.draw();
+                ctx.beginPath();
+                // رسم الخطوط المتصلة بناءً على "النبض"
+                ctx.strokeStyle = `rgba(0, 255, 136, ${globalPulse * 0.2})`;
+                ctx.lineWidth = 0.5;
+                particles.forEach(p2 => {
+                    let d = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if(d < 150 * globalPulse) {
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                    }
+                });
+                ctx.stroke();
+
+                ctx.fillStyle = '#00ff88';
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                ctx.fill();
+
+                p.y -= p.speed * globalPulse;
+                if(p.y < 0) p.y = height;
             });
 
-            requestAnimationFrame(animate);
+            requestAnimationFrame(draw);
         }
 
-        function changeMode() {
-            hue = Math.random() * 360;
-            document.documentElement.style.setProperty('--glow', `hsl(${hue}, 100%, 50%)`);
+        // محاكاة سحب البيانات الحية
+        function updatePulse() {
+            globalPulse = Math.random() * 2; // في الواقع يتم ربطها بـ API
+            document.getElementById('v-index').innerText = (globalPulse * 54.2).toFixed(2) + "%";
+            document.getElementById('feed-status').innerText = globalPulse > 1.2 ? "HIGH_ACTIVITY" : "STABLE_STREAM";
+            
+            document.getElementById('p1').style.width = Math.random() * 100 + "%";
+            document.getElementById('p2').style.width = Math.random() * 100 + "%";
         }
 
-        // تحديث الوقت
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toTimeString().split(' ')[0];
-        }, 1000);
+        function changeFrequency() {
+            const colors = ['#00ff88', '#ff0055', '#00f2ff', '#ffaa00'];
+            const newColor = colors[Math.floor(Math.random() * colors.length)];
+            document.documentElement.style.setProperty('--accent', newColor);
+        }
+
+        // تحديد الموقع
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('lat').innerText = pos.coords.latitude.toFixed(2);
+            document.getElementById('lng').innerText = pos.coords.longitude.toFixed(2);
+        });
 
         window.onresize = init;
+        setInterval(updatePulse, 3000);
         init();
-        animate();
+        draw();
     </script>
 </body>
 </html>
