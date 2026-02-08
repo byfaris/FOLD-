@@ -3,60 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GRID_01 | PRO EDITION</title>
+    <title>GRID_01 | PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Cairo:wght@700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/three"></script>
     <script src="https://unpkg.com/globe.gl"></script>
+
     <style>
         :root { --accent: #00f2ff; --bg: #000; --pos: #00ffcc; --neu: #bd00ff; --neg: #ff4d00; }
-        body, html { margin: 0; padding: 0; background: #000; color: #fff; overflow: hidden; font-family: 'Space Grotesk', sans-serif; }
-        #globe-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        
-        /* واجهة التحكم */
-        #ui-wrapper { position: relative; z-index: 20; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; align-items: center; pointer-events: none; padding: 40px 20px; }
-        .interactive { pointer-events: auto; }
-        
-        .header { text-align: center; }
-        .hero-title { font-size: clamp(1.5rem, 5vw, 2.5rem); margin: 10px 0; text-shadow: 0 0 20px var(--accent); }
-        
-        .main-core { width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0%, transparent 70%); border: 1px solid var(--accent); cursor: pointer; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,242,255,0.7); } 70% { box-shadow: 0 0 0 30px rgba(0,242,255,0); } 100% { box-shadow: 0 0 0 0 rgba(0,242,255,0); } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #000; color: #fff; font-family: 'Space Grotesk', sans-serif; height: 100vh; overflow: hidden; }
 
-        .vote-container { display: none; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 50px; }
-        .v-btn { padding: 15px 25px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6); color: #fff; font-weight: bold; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); font-size: 12px; }
-        .v-btn:hover { transform: scale(1.05); border-color: var(--accent); }
-        
-        .lang-nav { position: absolute; top: 20px; right: 20px; z-index: 30; pointer-events: auto; }
-        .l-btn { background: none; border: none; color: #555; cursor: pointer; padding: 5px; font-weight: bold; }
-        .l-btn.active { color: var(--accent); }
+        /* حاوية الكرة الأرضية */
+        #globe-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+        /* واجهة المستخدم الاحترافية */
+        #ui-layer {
+            position: relative; z-index: 10; height: 100vh;
+            display: flex; flex-direction: column; justify-content: space-between;
+            align-items: center; pointer-events: none; padding: 40px 20px;
+        }
+        .interactive { pointer-events: auto; }
+
+        .header-box { text-align: center; }
+        .hero-title { font-size: 2rem; letter-spacing: 2px; text-shadow: 0 0 15px var(--accent); margin-top: 10px; }
+
+        /* زر البدء المركزي */
+        .core-trigger {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 75%);
+            border: 1px solid var(--accent); cursor: pointer;
+            transition: 0.5s; animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,242,255,0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(0,242,255,0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0,242,255,0); }
+        }
+
+        /* أزرار التوقعات */
+        .vote-panel { display: none; gap: 15px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px; }
+        .vote-btn {
+            padding: 12px 24px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.8); color: #fff; font-weight: bold; cursor: pointer;
+            backdrop-filter: blur(10px); transition: 0.3s; font-size: 11px; letter-spacing: 1px;
+        }
+        .vote-btn:hover { border-color: var(--accent); transform: translateY(-3px); }
+
+        /* اللغة */
+        .lang-control { position: absolute; top: 20px; right: 20px; z-index: 20; pointer-events: auto; }
+        .lang-link { color: #444; cursor: pointer; font-size: 12px; margin-left: 10px; transition: 0.3s; }
+        .lang-link.active { color: var(--accent); font-weight: bold; }
 
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="globe-canvas"></div>
+    <div id="globe-container"></div>
 
-    <div class="lang-nav">
-        <button class="l-btn active" id="btn-en" onclick="setLang('en')">EN</button>
-        <button class="l-btn" id="btn-ar" onclick="setLang('ar')">AR</button>
+    <div class="lang-control">
+        <span class="lang-link active" id="ln-en" onclick="setLanguage('en')">EN</span>
+        <span class="lang-link" id="ln-ar" onclick="setLanguage('ar')">AR</span>
     </div>
 
-    <div id="ui-wrapper">
-        <div class="header">
-            <p style="font-size: 10px; letter-spacing: 4px; color: var(--accent);">SYSTEM_ACTIVE</p>
-            <h1 class="hero-title" id="main-t">GRID_01</h1>
-        </div>
+    <div id="ui-layer">
+        <header class="header-box">
+            <p style="font-size: 9px; letter-spacing: 5px; color: var(--accent)">SYSTEM_STATUS: ACTIVE</p>
+            <h1 class="hero-title" id="main-title">GRID_01</h1>
+        </header>
 
-        <div id="start-screen" class="interactive">
-            <div class="main-core" onclick="initApp()"></div>
-        </div>
+        <section id="start-screen" class="interactive">
+            <div class="core-trigger" onclick="launchExperience()"></div>
+        </section>
 
-        <div id="vote-screen" class="vote-container interactive">
-            <button class="v-btn" style="color:var(--pos)" onclick="handleVote('stable')">STABLE</button>
-            <button class="v-btn" style="color:var(--neu)" onclick="handleVote('uncertain')">UNCERTAIN</button>
-            <button class="v-btn" style="color:var(--neg)" onclick="handleVote('volatile')">VOLATILE</button>
-        </div>
+        <section id="vote-panel" class="vote-panel interactive">
+            <button class="vote-btn" style="color:var(--pos)" onclick="submitVote('stable')">STABLE</button>
+            <button class="vote-btn" style="color:var(--neu)" onclick="submitVote('uncertain')">UNCERTAIN</button>
+            <button class="vote-btn" style="color:var(--neg)" onclick="submitVote('volatile')">VOLATILE</button>
+        </section>
     </div>
 
     <script type="module">
@@ -74,70 +98,89 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        window.db = getDatabase(app);
+        const db = getDatabase(app);
+
+        window.db = db;
         window.fbRef = ref;
         window.fbOnValue = onValue;
         window.fbTransaction = runTransaction;
     </script>
 
     <script>
-        let world, geoData, firebaseData = {};
+        let globeInstance, geoJsonData, liveData = {};
 
-        // جلب الخريطة مرة واحدة فقط عند البداية لمنع الأخطاء
+        // 1. تحميل الخريطة مسبقاً لضمان السرعة
         fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
-            .then(res => res.json()).then(data => { geoData = data; });
+            .then(res => res.json()).then(data => { geoJsonData = data; });
 
-        function setLang(l) {
-            const isAr = l === 'ar';
+        function setLanguage(lang) {
+            const isAr = lang === 'ar';
             document.body.dir = isAr ? 'rtl' : 'ltr';
-            document.getElementById('main-t').innerText = isAr ? "الشبكة_01" : "GRID_01";
-            document.getElementById('btn-ar').classList.toggle('active', isAr);
-            document.getElementById('btn-en').classList.toggle('active', !isAr);
+            document.getElementById('main-title').innerText = isAr ? "الشبكة_01" : "GRID_01";
+            document.getElementById('ln-ar').classList.toggle('active', isAr);
+            document.getElementById('ln-en').classList.toggle('active', !isAr);
+            // تغيير نصوص الأزرار
+            const btns = document.querySelectorAll('.vote-btn');
+            if(isAr) {
+                btns[0].innerText = "مستقر"; btns[1].innerText = "غير مؤكد"; btns[2].innerText = "مضطرب";
+            } else {
+                btns[0].innerText = "STABLE"; btns[1].innerText = "UNCERTAIN"; btns[2].innerText = "VOLATILE";
+            }
         }
 
-        function initApp() {
+        function launchExperience() {
             document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('vote-screen').style.display = 'flex';
+            document.getElementById('vote-panel').style.display = 'flex';
             
-            world = Globe()(document.getElementById('globe-canvas'))
+            // 2. إعداد الكرة الأرضية
+            globeInstance = Globe()(document.getElementById('globe-container'))
                 .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
                 .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-                .showAtmosphere(true).atmosphereColor('#00f2ff')
-                .controls().autoRotate = true;
+                .showAtmosphere(true).atmosphereColor('#00f2ff').atmosphereDaylightAlpha(0.1);
 
-            // الربط المباشر مع Firebase
-            window.fbOnValue(window.fbRef(window.db, 'countries'), (snapshot) => {
-                firebaseData = snapshot.val() || {};
-                renderGlobe();
-            });
+            globeInstance.controls().autoRotate = true;
+            globeInstance.controls().autoRotateSpeed = 0.6;
+
+            // 3. الربط الحي مع Firebase
+            if(window.db) {
+                window.fbOnValue(window.fbRef(window.db, 'countries'), (snapshot) => {
+                    liveData = snapshot.val() || {};
+                    updateGlobePolygons();
+                });
+            }
         }
 
-        function renderGlobe() {
-            if (!world || !geoData) return;
-            world.polygonsData(geoData.features)
+        function updateGlobePolygons() {
+            if (!globeInstance || !geoJsonData) return;
+            globeInstance.polygonsData(geoJsonData.features)
                 .polygonCapColor(d => {
-                    const stats = firebaseData[d.properties.ISO_A2];
-                    if (!stats) return 'rgba(0, 242, 255, 0.05)';
-                    const max = Math.max(stats.stable || 0, stats.uncertain || 0, stats.volatile || 0);
-                    if (max === 0) return 'rgba(0, 242, 255, 0.05)';
-                    if (max === stats.stable) return 'rgba(0, 255, 204, 0.8)';
-                    if (max === stats.uncertain) return 'rgba(189, 0, 255, 0.8)';
+                    const countryStats = liveData[d.properties.ISO_A2];
+                    if (!countryStats) return 'rgba(0, 242, 255, 0.05)';
+                    const maxVal = Math.max(countryStats.stable || 0, countryStats.uncertain || 0, countryStats.volatile || 0);
+                    if (maxVal === 0) return 'rgba(0, 242, 255, 0.05)';
+                    if (maxVal === countryStats.stable) return 'rgba(0, 255, 204, 0.8)';
+                    if (maxVal === countryStats.uncertain) return 'rgba(189, 0, 255, 0.8)';
                     return 'rgba(255, 77, 0, 0.8)';
                 })
-                .polygonStrokeColor(() => 'rgba(0, 242, 255, 0.2)');
+                .polygonStrokeColor(() => 'rgba(0, 242, 255, 0.2)')
+                .polygonLabel(({ properties: d }) => `<b>${d.NAME}</b>`);
         }
 
-        function handleVote(choice) {
-            const countryCode = "SA"; 
+        function submitVote(type) {
+            const ISO_CODE = "SA"; // تجربة على السعودية
             if(window.db) {
-                const cRef = window.fbRef(window.db, 'countries/' + countryCode);
-                window.fbTransaction(cRef, (current) => {
+                const countryRef = window.fbRef(window.db, 'countries/' + ISO_CODE);
+                window.fbTransaction(countryRef, (current) => {
                     if (!current) current = { stable: 0, uncertain: 0, volatile: 0 };
-                    current[choice]++;
+                    current[type]++;
                     return current;
                 });
             }
         }
+
+        window.addEventListener('resize', () => {
+            if(globeInstance) globeInstance.width(window.innerWidth).height(window.innerHeight);
+        });
     </script>
 </body>
 </html>
