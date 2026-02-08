@@ -3,59 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GRID_01 // GLOBAL INTUITION NETWORK</title>
+    <title>GRID_01 // SECURE ACCESS</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Cairo:wght@700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/three"></script>
     <script src="https://unpkg.com/globe.gl"></script>
 
     <style>
-        :root { --accent: #00f2ff; --bg: #0a0c10; --card: rgba(17, 25, 40, 0.75); --pos: #00ffcc; --neu: #bd00ff; --neg: #ff4d00; }
+        :root { --accent: #00f2ff; --bg: #0a0c10; --card: rgba(17, 25, 40, 0.85); --pos: #00ffcc; --neu: #bd00ff; --neg: #ff4d00; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; font-family: 'Space Grotesk', sans-serif; }
 
-        /* Background Layers */
-        #globe-viz { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; filter: brightness(0.8); }
+        #globe-viz { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; filter: brightness(0.6); }
 
-        /* Top Header */
-        .system-header { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; z-index: 20; display: flex; justify-content: space-between; align-items: flex-start; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
+        /* Header Layout */
+        .system-header { position: fixed; top: 0; left: 0; width: 100%; padding: 25px; z-index: 9999; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
         .brand-info { pointer-events: none; }
-        .status-line { font-size: 10px; color: var(--accent); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 5px; }
-        .main-title { font-size: 1.5rem; font-weight: 700; color: #fff; }
-        .main-title span { opacity: 0.5; font-weight: 300; margin: 0 10px; }
+        .status-line { font-size: 10px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+        .main-title { font-size: 1.4rem; font-weight: 700; color: #fff; margin: 0; }
 
-        /* X Login Area (المكان الذي حددته بالدائرة الحمراء) */
-        .x-auth-container { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; pointer-events: auto; transition: 0.3s; }
-        .x-auth-container:hover { transform: scale(1.05); }
-        .x-circle { width: 45px; height: 45px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(0, 242, 255, 0.5); border: 2px solid var(--accent); }
-        .x-circle svg { width: 22px; fill: #000; }
-        .x-subtext { font-size: 9px; color: #fff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
-
-        /* Language Switcher */
-        .lang-control { display: flex; gap: 10px; pointer-events: auto; margin-bottom: 15px; }
-        .l-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 5px 12px; cursor: pointer; font-size: 11px; transition: 0.3s; border-radius: 4px; }
-        .l-btn.active { border-color: var(--accent); background: rgba(0, 242, 255, 0.1); color: var(--accent); }
-
-        /* Bottom Control Panel */
-        .control-panel { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; background: var(--card); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; z-index: 30; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .panel-label { font-size: 12px; letter-spacing: 3px; color: #888; margin-bottom: 20px; text-transform: uppercase; }
+        /* زر X في مكان الدائرة الحمراء - قابل للضغط الآن */
+        .x-auth-trigger { 
+            pointer-events: auto !important; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 8px; 
+            cursor: pointer; 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .x-auth-trigger:active { transform: scale(0.9); }
         
-        /* حالة القفل قبل التسجيل */
-        .vote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; opacity: 0.3; pointer-events: none; transition: 0.5s; }
-        .auth-active .vote-grid { opacity: 1; pointer-events: auto; }
+        .x-circle { 
+            width: 50px; 
+            height: 50px; 
+            background: #fff; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.6); 
+            border: 2px solid var(--accent); 
+        }
+        .x-circle svg { width: 24px; fill: #000; }
+        .x-label { font-size: 9px; color: #fff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 5px #000; }
 
-        .btn-neon { width: 100%; padding: 15px 5px; background: rgba(0,0,0,0.3); border: 1px solid; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 1px; transition: 0.3s; color: #fff; text-align: center; }
+        /* Control Panel */
+        .control-panel { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; background: var(--card); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 25px; z-index: 100; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .panel-label { font-size: 11px; letter-spacing: 4px; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; font-weight: bold; }
+        
+        .vote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; opacity: 0.2; pointer-events: none; transition: 0.8s; }
+        .auth-active .vote-grid { opacity: 1; pointer-events: auto; }
+        .auth-active .x-auth-trigger { opacity: 0.6; pointer-events: none; }
+
+        .btn-neon { width: 100%; padding: 16px 5px; background: rgba(0,0,0,0.4); border: 1px solid; border-radius: 12px; font-size: 10px; font-weight: 700; color: #fff; transition: 0.3s; }
         .stable { border-color: var(--pos); }
         .uncertain { border-color: var(--neu); }
         .volatile { border-color: var(--neg); }
-        .v-card:hover .btn-neon { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
-
-        .v-sub { font-size: 8px; color: #555; text-transform: lowercase; }
-
-        @media (max-width: 480px) {
-            .main-title { font-size: 1.1rem; }
-            .control-panel { padding: 15px; bottom: 15px; }
-        }
+        .btn-neon:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
     </style>
 </head>
 <body>
@@ -64,45 +69,31 @@
 
     <header class="system-header">
         <div class="brand-info">
-            <p class="status-line" id="st-text">Initiating Global Connection...</p>
-            <h1 class="main-title" id="m-title">GRID_01 <span>//</span> GLOBAL INTUITION</h1>
-            
-            <div class="lang-control" style="margin-top: 15px;">
-                <button class="l-btn active" id="btn-en" onclick="setLang('en')">EN</button>
-                <button class="l-btn" id="btn-ar" onclick="setLang('ar')">AR</button>
-            </div>
+            <p class="status-line" id="st-text">Awaiting Authentication...</p>
+            <h1 class="main-title">GRID_01</h1>
         </div>
 
-        <div class="x-auth-container" onclick="loginWithX()" id="auth-ui">
+        <div class="x-auth-trigger" id="auth-btn" onclick="loginWithX()">
             <div class="x-circle">
                 <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
             </div>
-            <span class="x-subtext" id="x-label">Sign in via X app</span>
+            <span class="x-label" id="x-text">Sign in via X</span>
         </div>
     </header>
 
     <div class="control-panel" id="main-panel">
-        <p class="panel-label" id="cp-label">Control Panel</p>
+        <p class="panel-label">Neural Network Input</p>
         <div class="vote-grid">
-            <div class="v-card" onclick="castVote('stable')">
-                <div class="btn-neon stable" id="b-st">STABLE</div>
-                <span class="v-sub">translucent</span>
-            </div>
-            <div class="v-card" onclick="castVote('uncertain')">
-                <div class="btn-neon uncertain" id="b-un">UNCERTAIN</div>
-                <span class="v-sub">additive</span>
-            </div>
-            <div class="v-card" onclick="castVote('volatile')">
-                <div class="btn-neon volatile" id="b-vo">VOLATILE</div>
-                <span class="v-sub">interface</span>
-            </div>
+            <button class="btn-neon stable" onclick="castVote('stable')">STABLE</button>
+            <button class="btn-neon uncertain" onclick="castVote('uncertain')">UNCERTAIN</button>
+            <button class="btn-neon volatile" onclick="castVote('volatile')">VOLATILE</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-        import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
-        import { getAuth, signInWithRedirect, TwitterAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+        import { getAuth, signInWithRedirect, TwitterAuthProvider, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+        import { getDatabase, ref, runTransaction } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAafCx8E7Te1JQn-u6Zc6xbQSTo2asZR8w",
@@ -119,67 +110,43 @@
         const db = getDatabase(app);
         const provider = new TwitterAuthProvider();
 
-        window.loginWithX = () => signInWithRedirect(auth, provider);
+        // ربط الدالة بالنافذة لتعمل مع onclick
+        window.loginWithX = () => {
+            console.log("Redirecting to X...");
+            signInWithRedirect(auth, provider);
+        };
+
+        // فحص حالة الدخول بعد العودة
+        getRedirectResult(auth).catch(err => console.error("Auth Error:", err));
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('main-panel').classList.add('auth-active');
-                document.getElementById('x-label').innerText = user.displayName;
-                document.getElementById('st-text').innerText = "LINKED // " + user.displayName;
+                document.getElementById('x-text').innerText = user.displayName;
+                document.getElementById('st-text').innerText = "NODE_ACTIVE // " + user.displayName.toUpperCase();
                 window.currentUser = user;
             }
         });
 
-        window.db = db; window.fbRef = ref; window.fbOnValue = onValue; window.fbTransaction = runTransaction;
+        window.castVote = (choice) => {
+            if(!window.currentUser) return;
+            const cRef = ref(db, 'countries/SA');
+            runTransaction(cRef, (curr) => {
+                if (!curr) curr = { stable: 0, uncertain: 0, volatile: 0 };
+                curr[choice]++; return curr;
+            });
+        };
     </script>
 
     <script>
-        // ... (كود Globe واللغات يبقى كما هو في نسختك الأصلية)
-        let world, geoData, currentDb = {};
-        fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
-            .then(res => res.json()).then(data => { geoData = data; initGlobe(); });
-
-        function initGlobe() {
-            world = Globe()(document.getElementById('globe-viz'))
-                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
-                .atmosphereColor('#00f2ff').showAtmosphere(true);
-            world.controls().autoRotate = true;
-            if(window.db) {
-                window.fbOnValue(window.fbRef(window.db, 'countries'), (snapshot) => {
-                    currentDb = snapshot.val() || {};
-                    refreshColors();
-                });
-            }
-        }
-
-        function refreshColors() {
-            if (!world || !geoData) return;
-            world.polygonsData(geoData.features).polygonCapColor(d => {
-                const s = currentDb[d.properties.ISO_A2];
-                if (!s) return 'rgba(0, 242, 255, 0.05)';
-                const max = Math.max(s.stable||0, s.uncertain||0, s.volatile||0);
-                if (max === s.stable) return 'rgba(0, 255, 204, 0.7)';
-                if (max === s.uncertain) return 'rgba(189, 0, 255, 0.7)';
-                return 'rgba(255, 77, 0, 0.7)';
-            }).polygonStrokeColor(() => 'rgba(0, 242, 255, 0.2)');
-        }
-
-        function castVote(choice) {
-            if(!window.currentUser) return alert("Please sign in via X first");
-            const ISO = "SA"; 
-            window.fbTransaction(window.fbRef(window.db, 'countries/'+ISO), (c) => {
-                if(!c) c = {stable:0, uncertain:0, volatile:0};
-                c[choice]++; return c;
-            });
-        }
-
-        function setLang(l) {
-            const isAr = l === 'ar';
-            document.body.dir = isAr ? 'rtl' : 'ltr';
-            document.getElementById('x-label').innerText = isAr ? "تسجيل عبر تطبيق X" : "Sign in via X app";
-            document.getElementById('cp-label').innerText = isAr ? "لوحة التحكم" : "Control Panel";
-            // ... (باقي الترجمات)
-        }
+        // إعداد الكرة الأرضية بصرياً
+        const world = Globe()(document.getElementById('globe-viz'))
+            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
+            .atmosphereColor('#00f2ff').showAtmosphere(true);
+        world.controls().autoRotate = true;
+        world.controls().autoRotateSpeed = 0.5;
+        
+        window.addEventListener('resize', () => { world.width(window.innerWidth).height(window.innerHeight); });
     </script>
 </body>
 </html>
