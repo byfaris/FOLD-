@@ -3,180 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GRID_01 | LIVE GLOBAL HUB</title>
+    <title>GRID_01 | RECOVERY MODE</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Cairo:wght@700&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/three"></script>
     <script src="https://unpkg.com/globe.gl"></script>
-
     <style>
         :root { --accent: #00f2ff; --bg: #000; --pos: #00ffcc; --neu: #bd00ff; --neg: #ff4d00; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; height: 100vh; overflow: hidden; }
-        
+        body { background: var(--bg); color: #fff; font-family: 'Space Grotesk', sans-serif; margin: 0; overflow: hidden; }
         #globe-canvas { position: fixed; top: 0; left: 0; z-index: 1; }
-        #app-interface { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
-        .ui-content { pointer-events: auto; text-align: center; width: 100%; padding: 20px; }
-        
-        .status-tag { color: var(--accent); font-size: 10px; letter-spacing: 5px; margin-bottom: 20px; text-transform: uppercase; text-shadow: 0 0 10px var(--accent); }
-        .hero-title { font-size: 26px; font-weight: 700; margin-bottom: 50px; line-height: 1.2; }
-
-        .pulse-core { width: 150px; height: 150px; background: radial-gradient(circle, var(--accent) 0%, transparent 75%); border: 1px solid rgba(0,242,255,0.3); border-radius: 50%; margin: 0 auto; animation: pulse 4s infinite ease-in-out; cursor: pointer; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 70px rgba(0,242,255,0.4); } }
-
-        .options-grid { display: none; gap: 20px; justify-content: center; animation: fadeInUp 0.8s ease; }
-        .sphere-btn { width: 90px; height: 90px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; transition: 0.4s; backdrop-filter: blur(10px); }
-        .pos { color: var(--pos); background: rgba(0, 255, 204, 0.1); }
-        .neu { color: var(--neu); background: rgba(189, 0, 255, 0.1); }
-        .neg { color: var(--neg); background: rgba(255, 77, 0, 0.1); }
-
-        .lang-nav { position: fixed; top: 30px; right: 30px; display: flex; gap: 12px; z-index: 100; }
-        .l-btn { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #555; padding: 8px 16px; cursor: pointer; font-size: 11px; }
-        .l-btn.active { color: var(--accent); border-color: var(--accent); }
-
-        #map-legend { display: none; position: fixed; bottom: 40px; width: 100%; justify-content: center; gap: 25px; font-size: 9px; z-index: 100; }
+        #interface { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; pointer-events: none; }
+        .btn-box { pointer-events: auto; display: flex; gap: 15px; margin-top: 20px; }
+        .s-btn { padding: 15px 25px; border-radius: 30px; border: 1px solid var(--accent); background: rgba(0,242,255,0.1); color: #fff; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        .s-btn:hover { background: var(--accent); color: #000; }
         .hidden { display: none !important; }
-        
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body id="mainBody">
+<body>
 
-    <div id="globe-canvas"></div>
+<div id="globe-canvas"></div>
 
-    <div class="lang-nav">
-        <button class="l-btn active" id="btn-en" onclick="setLang('en')">ENGLISH</button>
-        <button class="l-btn" id="btn-ar" onclick="setLang('ar')">العربية</button>
+<div id="interface">
+    <div id="step-1" style="pointer-events: auto;">
+        <h1 style="text-align:center">GRID_01<br><span style="color:var(--accent); font-size: 14px;">[CLICK TO INITIALIZE]</span></h1>
+        <button class="s-btn" onclick="toStep2()" style="margin: 20px auto; display: block;">ENTER SYSTEM</button>
     </div>
 
-    <div id="app-interface">
-        <div class="ui-content">
-            <div id="step-1">
-                <p class="status-tag" id="st-1">LIVE CLOUD SYNC ACTIVE</p>
-                <h1 class="hero-title" id="tt-1">GLOBAL INTUITION HUB:<br><span style="color:var(--accent)">[SYSTEM_READY]</span></h1>
-                <div class="pulse-core" onclick="toStep2()"></div>
-            </div>
-
-            <div class="options-grid" id="step-2">
-                <div class="sphere-btn pos" onclick="handleVote('stable')">STABLE</div>
-                <div class="sphere-btn neu" onclick="handleVote('uncertain')">UNCERTAIN</div>
-                <div class="sphere-btn neg" onclick="handleVote('volatile')">VOLATILE</div>
-            </div>
+    <div id="step-2" class="hidden">
+        <div class="btn-box">
+            <button class="s-btn" onclick="handleVote('stable')" style="border-color:var(--pos)">STABLE</button>
+            <button class="s-btn" onclick="handleVote('uncertain')" style="border-color:var(--neu)">UNCERTAIN</button>
+            <button class="s-btn" onclick="handleVote('volatile')" style="border-color:var(--neg)">VOLATILE</button>
         </div>
     </div>
+</div>
 
-    <div id="map-legend">
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--pos); box-shadow: 0 0 10px var(--pos);"></div> <span id="lb1">STABLE</span></div>
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--neu); box-shadow: 0 0 10px var(--neu);"></div> <span id="lb2">UNCERTAIN</span></div>
-        <div style="display:flex; align-items:center; gap:8px;"><div style="width:7px; height:7px; border-radius:50%; background:var(--neg); box-shadow: 0 0 10px var(--neg);"></div> <span id="lb3">VOLATILE</span></div>
-    </div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+    import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-        import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
+    const firebaseConfig = {
+        apiKey: "AIzaSyAafCx8E7Te1JQn-u6Zc6xbQSTo2asZR8w",
+        authDomain: "grid-01-75a86.firebaseapp.com",
+        projectId: "grid-01-75a86",
+        databaseURL: "https://grid-01-75a86-default-rtdb.firebaseio.com/",
+        storageBucket: "grid-01-75a86.firebasestorage.app",
+        messagingSenderId: "277430804916",
+        appId: "1:277430804916:web:fa36d92206b26393c152e1"
+    };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAafCx8E7Te1JQn-u6Zc6xbQSTo2asZR8w",
-            authDomain: "grid-01-75a86.firebaseapp.com",
-            projectId: "grid-01-75a86",
-            databaseURL: "https://grid-01-75a86-default-rtdb.firebaseio.com/",
-            storageBucket: "grid-01-75a86.firebasestorage.app",
-            messagingSenderId: "277430804916",
-            appId: "1:277430804916:web:fa36d92206b26393c152e1"
-        };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+    window.db = db;
+    window.fbRef = ref;
+    window.fbOnValue = onValue;
+    window.fbTransaction = runTransaction;
+</script>
 
-        // جعل الأدوات متاحة للسكربت التقليدي
-        window.db = db;
-        window.fbRef = ref;
-        window.fbOnValue = onValue;
-        window.fbTransaction = runTransaction;
-    </script>
+<script>
+    let world;
 
-    <script>
-        let currentL = 'en';
-        let world;
+    function toStep2() {
+        document.getElementById('step-1').classList.add('hidden');
+        document.getElementById('step-2').classList.remove('hidden');
+        initGlobe();
+    }
 
-        function setLang(l) {
-            currentL = l;
-            const isAr = l === 'ar';
-            document.body.dir = isAr ? 'rtl' : 'ltr';
-            document.body.style.fontFamily = isAr ? 'Cairo' : 'Space Grotesk';
-            document.getElementById('st-1').innerText = isAr ? "مزامنة السحابة نشطة" : "LIVE CLOUD SYNC ACTIVE";
-            document.getElementById('tt-1').innerHTML = isAr ? "مركز الحدس العالمي:<br><span style='color:var(--accent)'>[النظام_جاهز]</span>" : "GLOBAL INTUITION HUB:<br><span style='color:var(--accent)'>[SYSTEM_READY]</span>";
-            document.getElementById('lb1').innerText = isAr ? "مستقر" : "STABLE";
-            document.getElementById('lb2').innerText = isAr ? "غير مؤكد" : "UNCERTAIN";
-            document.getElementById('lb3').innerText = isAr ? "مضطرب" : "VOLATILE";
-            document.getElementById('btn-en').classList.toggle('active', l === 'en');
-            document.getElementById('btn-ar').classList.toggle('active', l === 'ar');
-        }
+    function initGlobe() {
+        world = Globe()(document.getElementById('globe-canvas'))
+            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
+            .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+            .atmosphereColor('#00f2ff')
+            .showAtmosphere(true);
 
-        function toStep2() {
-            document.getElementById('step-1').classList.add('hidden');
-            document.getElementById('step-2').style.display = 'flex';
-        }
-
-        async function handleVote(choice) {
-            // كود الدولة الافتراضي للسعودية (يمكنك تغييره أو جعله ديناميكياً)
-            const countryCode = "SA"; 
-            
-            if(window.db) {
-                const cRef = window.fbRef(window.db, 'countries/' + countryCode);
-                window.fbTransaction(cRef, (currentData) => {
-                    if (!currentData) currentData = { stable: 0, uncertain: 0, volatile: 0 };
-                    currentData[choice]++;
-                    return currentData;
-                });
-            }
-            initGlobe();
-        }
-
-        function initGlobe() {
-            document.getElementById('step-2').classList.add('hidden');
-            document.getElementById('map-legend').style.display = 'flex';
-            
-            world = Globe()(document.getElementById('globe-canvas'))
-                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
-                .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
-                .showAtmosphere(true)
-                .atmosphereColor('#00f2ff')
-                .atmosphereDaylightAlpha(0.15);
-
-            // المزامنة الحية مع قاعدة بياناتك الحقيقية
+        // مراقبة البيانات فورياً
+        if(window.db) {
             window.fbOnValue(window.fbRef(window.db, 'countries'), (snapshot) => {
                 const data = snapshot.val() || {};
-                fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
-                    .then(res => res.json())
-                    .then(countries => {
-                        world.polygonsData(countries.features)
-                            .polygonCapColor(d => {
-                                const stats = data[d.properties.ISO_A2];
-                                if (!stats) return 'rgba(0, 242, 255, 0.05)';
-                                
-                                const max = Math.max(stats.stable, stats.uncertain, stats.volatile);
-                                if (max === 0) return 'rgba(0, 242, 255, 0.05)';
-                                if (max === stats.stable) return 'rgba(0, 255, 204, 0.6)';
-                                if (max === stats.uncertain) return 'rgba(189, 0, 255, 0.6)';
-                                return 'rgba(255, 77, 0, 0.6)';
-                            })
-                            .polygonStrokeColor(() => 'rgba(0, 242, 255, 0.3)')
-                            .polygonLabel(({ properties: d }) => `
-                                <div style="background:rgba(0,0,0,0.9); padding:10px; border:1px solid var(--accent); border-radius:4px; font-family:sans-serif;">
-                                    <b style="color:var(--accent)">${d.NAME}</b>
-                                </div>
-                            `);
-                    });
+                console.log("Data received from Firebase:", data); // فحص في المتصفح
+                updateColors(data);
             });
-
-            world.controls().autoRotate = true;
-            world.controls().autoRotateSpeed = 0.5;
         }
+    }
 
-        window.addEventListener('resize', () => {
-            if(world) world.width(window.innerWidth).height(window.innerHeight);
-        });
-    </script>
+    function updateColors(data) {
+        fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
+            .then(res => res.json())
+            .then(countries => {
+                world.polygonsData(countries.features)
+                    .polygonCapColor(d => {
+                        const stats = data[d.properties.ISO_A2];
+                        if (!stats) return 'rgba(0, 242, 255, 0.05)';
+                        const max = Math.max(stats.stable || 0, stats.uncertain || 0, stats.volatile || 0);
+                        if (max === 0) return 'rgba(0, 242, 255, 0.05)';
+                        if (max === stats.stable) return 'rgba(0, 255, 204, 0.8)';
+                        if (max === stats.uncertain) return 'rgba(189, 0, 255, 0.8)';
+                        return 'rgba(255, 77, 0, 0.8)';
+                    })
+                    .polygonStrokeColor(() => 'rgba(0, 242, 255, 0.2)');
+            });
+    }
+
+    async function handleVote(choice) {
+        const countryCode = "SA"; // تجربة على السعودية أولاً
+        if(window.db) {
+            const cRef = window.fbRef(window.db, 'countries/' + countryCode);
+            window.fbTransaction(cRef, (currentData) => {
+                if (!currentData) currentData = { stable: 0, uncertain: 0, volatile: 0 };
+                currentData[choice]++;
+                return currentData;
+            }).then(() => {
+                console.log("Vote successful!");
+            }).catch(err => {
+                alert("Firebase Error: " + err.message);
+            });
+        } else {
+            alert("Firebase not initialized yet!");
+        }
+    }
+</script>
 </body>
 </html>
