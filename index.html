@@ -3,55 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>خريطة إرسال البيانات العالمية</title>
+    <title>Global Data Link - Future Edition</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: sans-serif; background: #1a1a1a; color: white; }
-        #map { height: 70vh; width: 100%; background: #0b141a; }
-        .controls { padding: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; background: #222; }
-        input { padding: 10px; border-radius: 5px; border: none; width: 150px; }
-        button { padding: 10px 20px; border-radius: 5px; border: none; background: #2ecc71; color: white; cursor: pointer; font-weight: bold; }
-        button:hover { background: #27ae60; }
-        .status { text-align: center; padding: 10px; color: #f1c40f; }
+        :root {
+            --primary: #00f2ff; /* لون سيان مستقبلي */
+            --accent: #7000ff;
+            --bg: #050a0f;
+            --glass: rgba(15, 25, 35, 0.85);
+        }
+
+        body, html { margin: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: white; overflow: hidden; }
+        
+        /* تصميم الخريطة الخلفي */
+        #map { height: 100vh; width: 100%; filter: brightness(0.6) contrast(1.2); }
+
+        /* الطبقة الزجاجية فوق الخريطة */
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            bottom: 20px;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        /* لوحة التحكم العلوي */
+        .control-panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            pointer-events: auto;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+        }
+
+        button:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--primary); }
+
+        /* سجل النشاط الجانبي */
+        .activity-log {
+            width: 300px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            pointer-events: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            font-size: 12px;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .glitch-text { color: var(--primary); text-shadow: 0 0 5px var(--primary); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="map"></div>
 
-<div class="controls">
-    <input type="text" id="senderID" placeholder="ID المرسل (مثلاً: 1)">
-    <input type="text" id="receiverID" placeholder="ID المستقبل (مثلاً: 2)">
-    <input type="text" id="message" placeholder="اكتب رسالتك هنا...">
-    <button onclick="sendData()">إرسال البيانات</button>
+<div class="ui-overlay">
+    <div class="control-panel">
+        <div style="margin-left: 20px;">
+            <h2 style="margin:0; color: var(--primary); font-size: 18px;">نظام تتبع البيانات العالمي</h2>
+            <small style="color: #aaa;">بروتوكول تشفير: AES-256</small>
+        </div>
+        <input type="text" id="senderID" placeholder="ID المرسل (1-5)">
+        <input type="text" id="receiverID" placeholder="ID المستقبل (1-5)">
+        <input type="text" id="message" style="flex-grow: 1;" placeholder="اكتب رسالة مشفرة...">
+        <button onclick="sendData()">تفعيل الإرسال</button>
+    </div>
+
+    <div class="activity-log" id="log">
+        <div class="glitch-text">سجل النشاطات الحية:</div>
+    </div>
 </div>
-<div id="status" class="status">جاهز للإرسال...</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // إعداد الخريطة بتصميم ليلي
-    const map = L.map('map').setView([20, 0], 2);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
+    // تهيئة الخريطة بتصميم مظلم جداً
+    const map = L.map('map', { zoomControl: false }).setView([20, 10], 3);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // قاعدة بيانات وهمية لمواقع المستخدمين بناءً على الـ ID
     const users = {
-        "1": { name: "فارس", coords: [24.0889, 38.0618] }, // ينبع
+        "1": { name: "ينبع", coords: [24.0889, 38.0618] },
         "2": { name: "لندن", coords: [51.5074, -0.1278] },
         "3": { name: "نيويورك", coords: [40.7128, -74.0060] },
         "4": { name: "طوكيو", coords: [35.6762, 139.6503] },
         "5": { name: "سيدني", coords: [-33.8688, 151.2093] }
     };
 
-    // إضافة علامات للمستخدمين على الخريطة
+    // إضافة النقاط بتأثير متوهج
     Object.keys(users).forEach(id => {
         L.circleMarker(users[id].coords, {
-            color: '#3498db',
-            radius: 8,
-            fillOpacity: 0.8
-        }).addTo(map).bindPopup(`ID: ${id} - ${users[id].name}`);
+            color: '#00f2ff',
+            fillColor: '#00f2ff',
+            fillOpacity: 0.5,
+            radius: 6,
+            weight: 2
+        }).addTo(map);
     });
+
+    function addLog(msg) {
+        const log = document.getElementById('log');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span style="color: #00f2ff;">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
+        log.prepend(entry);
+    }
 
     function sendData() {
         const sID = document.getElementById('senderID').value;
@@ -59,41 +157,40 @@
         const msg = document.getElementById('message').value;
 
         if (!users[sID] || !users[rID]) {
-            alert("يرجى إدخال ID صحيح (من 1 إلى 5)");
+            addLog("<span style='color: red;'>خطأ في تحديد الهوية!</span>");
             return;
         }
 
         const start = users[sID].coords;
         const end = users[rID].coords;
 
-        // رسم الخط الأساسي (باهت)
-        const line = L.polyline([start, end], {color: '#444', weight: 2, dashArray: '5, 10'}).addTo(map);
+        addLog(`بدء نقل البيانات من ${users[sID].name}...`);
 
-        // إنشاء تأثير "النبضة" أو تلوين الخط المتحرك
-        let count = 0;
-        const statusDiv = document.getElementById('status');
-        statusDiv.innerText = `جاري إرسال: "${msg}" من ${users[sID].name} إلى ${users[rID].name}...`;
+        // رسم مسار منحني أو مستقيم متوهج
+        const animatedLine = L.polyline([start, start], {
+            color: '#00f2ff',
+            weight: 3,
+            opacity: 0.8,
+            dashArray: '1, 10'
+        }).addTo(map);
 
-        // مصفوفة النقاط للتحريك
-        const animatedLine = L.polyline([start, start], {color: '#2ecc71', weight: 4}).addTo(map);
-        
         let progress = 0;
         const interval = setInterval(() => {
-            progress += 0.02; // سرعة الحركة
+            progress += 0.03;
             if (progress >= 1) {
                 clearInterval(interval);
                 animatedLine.setLatLngs([start, end]);
-                statusDiv.innerText = "تم وصول الرسالة بنجاح! ✅";
-                setTimeout(() => {
-                    map.removeLayer(animatedLine);
-                    map.removeLayer(line);
-                }, 2000);
+                addLog(`تم تسليم الرسالة في ${users[rID].name}: <span style="color: #2ecc71;">"${msg}"</span>`);
+                
+                // تأثير نبض عند الوصول
+                const pulse = L.circle(end, { radius: 50000, color: '#2ecc71', fillOpacity: 0.3 }).addTo(map);
+                setTimeout(() => map.removeLayer(pulse), 1000);
             } else {
                 const currentLat = start[0] + (end[0] - start[0]) * progress;
                 const currentLng = start[1] + (end[1] - start[1]) * progress;
                 animatedLine.setLatLngs([start, [currentLat, currentLng]]);
             }
-        }, 20);
+        }, 30);
     }
 </script>
 
