@@ -2,126 +2,142 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Data Link - Future Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Data Link - Cross Platform</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         :root {
-            --primary: #00f2ff; /* لون سيان مستقبلي */
-            --accent: #7000ff;
-            --bg: #050a0f;
-            --glass: rgba(15, 25, 35, 0.85);
+            --primary-neon: #00f2ff;
+            --bg-dark: #02060a;
+            --panel-bg: rgba(10, 20, 30, 0.9);
         }
 
-        body, html { margin: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: white; overflow: hidden; }
-        
-        /* تصميم الخريطة الخلفي */
-        #map { height: 100vh; width: 100%; filter: brightness(0.6) contrast(1.2); }
+        /* تصفير الإعدادات لضمان التوافق مع كل المتصفحات */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        /* الطبقة الزجاجية فوق الخريطة */
-        .ui-overlay {
+        body, html { 
+            height: 100%; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: var(--bg-dark); 
+            color: white; 
+            overflow: hidden;
+        }
+
+        /* الخريطة تأخذ كامل الشاشة */
+        #map { 
+            position: absolute; 
+            top: 0; bottom: 0; left: 0; right: 0; 
+            z-index: 1; 
+            background: var(--bg-dark);
+        }
+
+        /* الواجهة العلوية - متجاوبة */
+        .header-ui {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            left: 20px;
-            bottom: 20px;
-            pointer-events: none;
+            top: 10px; left: 10px; right: 10px;
+            z-index: 1000;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            z-index: 1000;
+            gap: 10px;
+            pointer-events: none;
         }
 
-        /* لوحة التحكم العلوي */
-        .control-panel {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 20px;
-            border-radius: 15px;
+        .main-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px); /* لدعم متصفح Safari */
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px;
             pointer-events: auto;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
         }
 
-        input {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--primary);
-            color: var(--primary);
+        input, button {
+            width: 100%;
             padding: 12px;
             border-radius: 8px;
-            outline: none;
             font-size: 14px;
+            border: 1px solid rgba(0, 242, 255, 0.5);
+            background: rgba(0,0,0,0.3);
+            color: white;
+            outline: none;
         }
 
         button {
-            background: linear-gradient(45deg, var(--primary), var(--accent));
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
+            background: linear-gradient(90deg, #00f2ff, #7000ff);
             font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            cursor: pointer;
+            border: none;
             transition: 0.3s;
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
         }
 
-        button:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--primary); }
+        button:active { transform: scale(0.95); }
 
-        /* سجل النشاط الجانبي */
-        .activity-log {
-            width: 300px;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 242, 255, 0.1);
-            border-radius: 15px;
-            padding: 15px;
-            pointer-events: auto;
-            max-height: 400px;
+        /* سجل النشاط السفلي - للجوال والكمبيوتر */
+        .log-container {
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            right: 10px;
+            max-width: 400px;
+            max-height: 150px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            padding: 10px;
             overflow-y: auto;
+            font-size: 11px;
+            pointer-events: auto;
+            border-right: 3px solid var(--primary-neon);
         }
 
-        .log-entry {
-            font-size: 12px;
-            padding: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            animation: fadeIn 0.5s ease-out;
+        /* تنسيق النقاط على الخريطة */
+        .pulse-icon {
+            background: var(--primary-neon);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary-neon);
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
-        .glitch-text { color: var(--primary); text-shadow: 0 0 5px var(--primary); font-weight: bold; }
+        /* الاستعلامات البرمجية للجوال (Responsive) */
+        @media (max-width: 600px) {
+            .main-panel { grid-template-columns: 1fr; }
+            .header-ui { top: 5px; }
+            .log-container { width: calc(100% - 20px); bottom: 10px; }
+        }
     </style>
 </head>
 <body>
 
 <div id="map"></div>
 
-<div class="ui-overlay">
-    <div class="control-panel">
-        <div style="margin-left: 20px;">
-            <h2 style="margin:0; color: var(--primary); font-size: 18px;">نظام تتبع البيانات العالمي</h2>
-            <small style="color: #aaa;">بروتوكول تشفير: AES-256</small>
-        </div>
-        <input type="text" id="senderID" placeholder="ID المرسل (1-5)">
-        <input type="text" id="receiverID" placeholder="ID المستقبل (1-5)">
-        <input type="text" id="message" style="flex-grow: 1;" placeholder="اكتب رسالة مشفرة...">
-        <button onclick="sendData()">تفعيل الإرسال</button>
-    </div>
-
-    <div class="activity-log" id="log">
-        <div class="glitch-text">سجل النشاطات الحية:</div>
+<div class="header-ui">
+    <div class="main-panel">
+        <input type="number" id="senderID" placeholder="ID المرسل">
+        <input type="number" id="receiverID" placeholder="ID المستقبل">
+        <input type="text" id="message" placeholder="نص الرسالة...">
+        <button onclick="sendData()">تشفير وإرسال</button>
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div class="log-container" id="log">
+    <div style="color:var(--primary-neon)">> نظام التشغيل جاهز...</div>
+</div>
+
 <script>
-    // تهيئة الخريطة بتصميم مظلم جداً
-    const map = L.map('map', { zoomControl: false }).setView([20, 10], 3);
+    // إعداد الخريطة مع تعطيل الـ Zoom بالإصبع لمنع تداخل الواجهة في الجوال
+    const map = L.map('map', { 
+        zoomControl: false,
+        attributionControl: false 
+    }).setView([20, 10], 2);
+
+    // استخدام خرائط CartoDB Dark (بدون مفتاح API لسهولة الاستخدام)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
     const users = {
@@ -132,65 +148,61 @@
         "5": { name: "سيدني", coords: [-33.8688, 151.2093] }
     };
 
-    // إضافة النقاط بتأثير متوهج
-    Object.keys(users).forEach(id => {
-        L.circleMarker(users[id].coords, {
+    // رسم المواقع
+    Object.values(users).forEach(u => {
+        L.circleMarker(u.coords, {
+            radius: 5,
             color: '#00f2ff',
-            fillColor: '#00f2ff',
-            fillOpacity: 0.5,
-            radius: 6,
-            weight: 2
+            fillOpacity: 1
         }).addTo(map);
     });
 
-    function addLog(msg) {
+    function addLog(text) {
         const log = document.getElementById('log');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerHTML = `<span style="color: #00f2ff;">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
-        log.prepend(entry);
+        log.innerHTML += `<div>> ${text}</div>`;
+        log.scrollTop = log.scrollHeight;
     }
 
     function sendData() {
-        const sID = document.getElementById('senderID').value;
-        const rID = document.getElementById('receiverID').value;
-        const msg = document.getElementById('message').value;
+        const s = document.getElementById('senderID').value;
+        const r = document.getElementById('receiverID').value;
+        const m = document.getElementById('message').value || "Data Packet";
 
-        if (!users[sID] || !users[rID]) {
-            addLog("<span style='color: red;'>خطأ في تحديد الهوية!</span>");
+        if(!users[s] || !users[r]) {
+            addLog("<span style='color:red'>خطأ: ID غير معروف</span>");
             return;
         }
 
-        const start = users[sID].coords;
-        const end = users[rID].coords;
+        const start = users[s].coords;
+        const end = users[r].coords;
 
-        addLog(`بدء نقل البيانات من ${users[sID].name}...`);
+        addLog(`إرسال من ${users[s].name} إلى ${users[r].name}...`);
 
-        // رسم مسار منحني أو مستقيم متوهج
-        const animatedLine = L.polyline([start, start], {
+        // تأثير الخط المتحرك متوافق مع كافة المتصفحات
+        const line = L.polyline([start, start], {
             color: '#00f2ff',
-            weight: 3,
-            opacity: 0.8,
-            dashArray: '1, 10'
+            weight: 2,
+            dashArray: '5, 5',
+            opacity: 0.6
         }).addTo(map);
 
         let progress = 0;
-        const interval = setInterval(() => {
-            progress += 0.03;
-            if (progress >= 1) {
-                clearInterval(interval);
-                animatedLine.setLatLngs([start, end]);
-                addLog(`تم تسليم الرسالة في ${users[rID].name}: <span style="color: #2ecc71;">"${msg}"</span>`);
-                
-                // تأثير نبض عند الوصول
-                const pulse = L.circle(end, { radius: 50000, color: '#2ecc71', fillOpacity: 0.3 }).addTo(map);
-                setTimeout(() => map.removeLayer(pulse), 1000);
-            } else {
+        const step = 0.02;
+
+        function animate() {
+            progress += step;
+            if (progress <= 1) {
                 const currentLat = start[0] + (end[0] - start[0]) * progress;
                 const currentLng = start[1] + (end[1] - start[1]) * progress;
-                animatedLine.setLatLngs([start, [currentLat, currentLng]]);
+                line.setLatLngs([start, [currentLat, currentLng]]);
+                requestAnimationFrame(animate);
+            } else {
+                line.setStyle({color: '#7000ff', opacity: 1});
+                addLog(`وصلت: <span style="color:#00f2ff">${m}</span>`);
+                setTimeout(() => map.removeLayer(line), 3000);
             }
-        }, 30);
+        }
+        animate();
     }
 </script>
 
