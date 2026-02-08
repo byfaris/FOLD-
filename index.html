@@ -1,152 +1,250 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GRID_01 // SECURE ACCESS</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&family=Cairo:wght@700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/three"></script>
-    <script src="https://unpkg.com/globe.gl"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE ENTITY // المشروع المستحيل</title>
     <style>
-        :root { --accent: #00f2ff; --bg: #0a0c10; --card: rgba(17, 25, 40, 0.85); --pos: #00ffcc; --neu: #bd00ff; --neg: #ff4d00; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; font-family: 'Space Grotesk', sans-serif; }
-
-        #globe-viz { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; filter: brightness(0.6); }
-
-        /* Header Layout */
-        .system-header { position: fixed; top: 0; left: 0; width: 100%; padding: 25px; z-index: 9999; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
-        .brand-info { pointer-events: none; }
-        .status-line { font-size: 10px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
-        .main-title { font-size: 1.4rem; font-weight: 700; color: #fff; margin: 0; }
-
-        /* زر X في مكان الدائرة الحمراء - قابل للضغط الآن */
-        .x-auth-trigger { 
-            pointer-events: auto !important; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 8px; 
-            cursor: pointer; 
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        :root {
+            --glow: #00f2ff;
+            --bg: #050505;
         }
-        .x-auth-trigger:active { transform: scale(0.9); }
-        
-        .x-circle { 
-            width: 50px; 
-            height: 50px; 
-            background: #fff; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.6); 
-            border: 2px solid var(--accent); 
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
         }
-        .x-circle svg { width: 24px; fill: #000; }
-        .x-label { font-size: 9px; color: #fff; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 5px #000; }
 
-        /* Control Panel */
-        .control-panel { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 500px; background: var(--card); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 25px; z-index: 100; display: flex; flex-direction: column; align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-        .panel-label { font-size: 11px; letter-spacing: 4px; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; font-weight: bold; }
+        /* الطبقة التفاعلية */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* الواجهة الأمامية */
+        .ui-overlay {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.8) 100%);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .system-status {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: var(--glow);
+            text-transform: uppercase;
+        }
+
+        .main-content {
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 8vw, 5rem);
+            margin: 0;
+            line-height: 0.9;
+            text-transform: uppercase;
+            font-weight: 900;
+            background: linear-gradient(to bottom, #fff, #444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .description {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #888;
+            line-height: 1.6;
+            pointer-events: auto;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #444;
+            letter-spacing: 5px;
+        }
+
+        .interactive-btn {
+            pointer-events: auto;
+            background: transparent;
+            border: 1px solid var(--glow);
+            color: var(--glow);
+            padding: 15px 30px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 30px;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+        }
+
+        .interactive-btn:hover {
+            background: var(--glow);
+            color: black;
+            box-shadow: 0 0 30px var(--glow);
+        }
+
+        /* تأثير التشويش (Glitch) */
+        .glitch {
+            position: relative;
+        }
         
-        .vote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; opacity: 0.2; pointer-events: none; transition: 0.8s; }
-        .auth-active .vote-grid { opacity: 1; pointer-events: auto; }
-        .auth-active .x-auth-trigger { opacity: 0.6; pointer-events: none; }
+        .glitch::before {
+            content: attr(data-text);
+            position: absolute;
+            left: -2px;
+            text-shadow: 2px 0 red;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
 
-        .btn-neon { width: 100%; padding: 16px 5px; background: rgba(0,0,0,0.4); border: 1px solid; border-radius: 12px; font-size: 10px; font-weight: 700; color: #fff; transition: 0.3s; }
-        .stable { border-color: var(--pos); }
-        .uncertain { border-color: var(--neu); }
-        .volatile { border-color: var(--neg); }
-        .btn-neon:hover { background: #fff; color: #000; box-shadow: 0 0 20px #fff; }
+        @keyframes glitch-anim {
+            0% { clip: rect(31px, 9999px, 94px, 0); }
+            20% { clip: rect(62px, 9999px, 42px, 0); }
+            /* ... استمرار التأثير ... */
+            100% { clip: rect(89px, 9999px, 98px, 0); }
+        }
     </style>
 </head>
 <body>
 
-    <div id="globe-viz"></div>
+    <canvas id="canvas"></canvas>
 
-    <header class="system-header">
-        <div class="brand-info">
-            <p class="status-line" id="st-text">Awaiting Authentication...</p>
-            <h1 class="main-title">GRID_01</h1>
+    <div class="ui-overlay">
+        <div class="header">
+            <div class="system-status">System: <span id="clock">00:00:00</span> // Active</div>
+            <div class="system-status">Core: Organic_Intelligence_v1</div>
         </div>
 
-        <div class="x-auth-trigger" id="auth-btn" onclick="loginWithX()">
-            <div class="x-circle">
-                <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-            </div>
-            <span class="x-label" id="x-text">Sign in via X</span>
+        <div class="main-content">
+            <h1 class="glitch" data-text="BEYOND AI">BEYOND AI</h1>
+            <p class="description">
+                هذا الموقع ليس مجرد كود ثابت؛ إنه نسيج رياضي من خوارزميات الـ Flow Fields. 
+                كل جسيم تراه يتحرك بناءً على معادلات Perlin Noise التي تولد فوضى منظمة، 
+                لا يمكن توقع مسارها أو تكرارها بدقة.
+            </p>
+            <button class="interactive-btn" onclick="changeMode()">إعادة توليد النسيج</button>
         </div>
-    </header>
 
-    <div class="control-panel" id="main-panel">
-        <p class="panel-label">Neural Network Input</p>
-        <div class="vote-grid">
-            <button class="btn-neon stable" onclick="castVote('stable')">STABLE</button>
-            <button class="btn-neon uncertain" onclick="castVote('uncertain')">UNCERTAIN</button>
-            <button class="btn-neon volatile" onclick="castVote('volatile')">VOLATILE</button>
+        <div class="footer">
+            <div>COORDINATES: <span id="coords">0.0, 0.0</span></div>
+            <div>STATUS: UNREPLICABLE</div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-        import { getAuth, signInWithRedirect, TwitterAuthProvider, onAuthStateChanged, getRedirectResult } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-        import { getDatabase, ref, runTransaction } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAafCx8E7Te1JQn-u6Zc6xbQSTo2asZR8w",
-            authDomain: "grid-01-75a86.firebaseapp.com",
-            projectId: "grid-01-75a86",
-            databaseURL: "https://grid-01-75a86-default-rtdb.firebaseio.com/",
-            storageBucket: "grid-01-75a86.firebasestorage.app",
-            messagingSenderId: "277430804916",
-            appId: "1:277430804916:web:fa36d92206b26393c152e1"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-        const provider = new TwitterAuthProvider();
-
-        // ربط الدالة بالنافذة لتعمل مع onclick
-        window.loginWithX = () => {
-            console.log("Redirecting to X...");
-            signInWithRedirect(auth, provider);
-        };
-
-        // فحص حالة الدخول بعد العودة
-        getRedirectResult(auth).catch(err => console.error("Auth Error:", err));
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('main-panel').classList.add('auth-active');
-                document.getElementById('x-text').innerText = user.displayName;
-                document.getElementById('st-text').innerText = "NODE_ACTIVE // " + user.displayName.toUpperCase();
-                window.currentUser = user;
-            }
-        });
-
-        window.castVote = (choice) => {
-            if(!window.currentUser) return;
-            const cRef = ref(db, 'countries/SA');
-            runTransaction(cRef, (curr) => {
-                if (!curr) curr = { stable: 0, uncertain: 0, volatile: 0 };
-                curr[choice]++; return curr;
-            });
-        };
-    </script>
-
     <script>
-        // إعداد الكرة الأرضية بصرياً
-        const world = Globe()(document.getElementById('globe-viz'))
-            .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
-            .atmosphereColor('#00f2ff').showAtmosphere(true);
-        world.controls().autoRotate = true;
-        world.controls().autoRotateSpeed = 0.5;
-        
-        window.addEventListener('resize', () => { world.width(window.innerWidth).height(window.innerHeight); });
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let width, height;
+        let hue = 180;
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.life = Math.random() * 100 + 100;
+                this.acc = 0.05;
+            }
+
+            update(mouse) {
+                // الربط مع الماوس لخلق "الجاذبية العكسية"
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < 150) {
+                    this.vx -= dx / dist * 0.5;
+                    this.vy -= dy / dist * 0.5;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+
+                if (this.life <= 0 || this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = `hsla(${hue}, 100%, 50%, ${this.life / 200})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 500; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        const mouse = { x: -1000, y: -1000 };
+        window.onmousemove = (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            document.getElementById('coords').innerText = `${mouse.x.toFixed(1)}, ${mouse.y.toFixed(1)}`;
+        };
+
+        function animate() {
+            // سر الجمال هنا: لا نمسح الشاشة بالكامل بل نضع طبقة شفافة لخلق تأثير "الذيول"
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+
+            particles.forEach(p => {
+                p.update(mouse);
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        function changeMode() {
+            hue = Math.random() * 360;
+            document.documentElement.style.setProperty('--glow', `hsl(${hue}, 100%, 50%)`);
+        }
+
+        // تحديث الوقت
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toTimeString().split(' ')[0];
+        }, 1000);
+
+        window.onresize = init;
+        init();
+        animate();
     </script>
 </body>
 </html>
