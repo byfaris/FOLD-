@@ -3,87 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D Global Data Link</title>
+    <title>Global Cyber Globe 3D</title>
     
     <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
     <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
 
     <style>
         :root {
-            --primary-neon: #00f2ff;
-            --accent: #7000ff;
-            --glass: rgba(10, 20, 30, 0.8);
+            --neon: #00f2ff;
+            --purple: #7000ff;
+            --bg: #010508;
+            --glass: rgba(6, 11, 19, 0.8);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; font-family: 'Segoe UI', sans-serif; background: #000; color: white; overflow: hidden; }
+        body, html { height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; overflow: hidden; }
 
         #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
 
-        /* واجهة التحكم */
-        .overlay {
+        /* واجهة المستخدم العلوية */
+        .header-interface {
             position: absolute;
-            top: 20px; left: 20px; right: 20px;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
             z-index: 10;
+            width: 90%;
+            max-width: 850px;
             pointer-events: none;
         }
 
-        .panel {
+        .control-grid {
             background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(0, 242, 255, 0.2);
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 15px;
             pointer-events: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            display: flex;
             gap: 10px;
-            max-width: 900px;
-            margin: 0 auto;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
         input, button {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid var(--primary-neon);
-            color: white;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--neon);
+            color: var(--neon);
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 6px;
             outline: none;
             font-size: 13px;
+            flex: 1;
         }
 
         button {
-            background: linear-gradient(45deg, var(--primary-neon), var(--accent));
+            background: linear-gradient(45deg, var(--neon), var(--purple));
+            color: white;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            transition: 0.3s;
+            text-transform: uppercase;
+            max-width: 150px;
         }
 
-        button:hover { box-shadow: 0 0 15px var(--primary-neon); }
+        button:hover { filter: brightness(1.2); box-shadow: 0 0 15px var(--neon); }
 
-        .log {
+        /* سجل النشاط الجانبي */
+        .terminal-log {
             position: absolute;
-            bottom: 30px; left: 20px;
-            width: 280px;
+            bottom: 25px; right: 20px;
+            width: 260px;
             background: var(--glass);
+            border-right: 4px solid var(--neon);
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
             font-size: 11px;
             z-index: 10;
-            border-left: 3px solid var(--primary-neon);
-            max-height: 120px;
+            max-height: 150px;
             overflow-y: auto;
         }
 
-        /* تنسيق علامات المواقع 3D */
-        .marker {
-            width: 12px; height: 12px;
-            background: var(--primary-neon);
+        .marker-point {
+            width: 10px; height: 10px;
+            background: var(--neon);
             border-radius: 50%;
-            box-shadow: 0 0 15px var(--primary-neon);
-            cursor: pointer;
+            box-shadow: 0 0 15px var(--neon);
         }
     </style>
 </head>
@@ -91,79 +96,79 @@
 
 <div id="map"></div>
 
-<div class="overlay">
-    <div class="panel">
-        <input type="number" id="sID" placeholder="ID المرسل">
-        <input type="number" id="rID" placeholder="ID المستقبل">
-        <input type="text" id="msg" placeholder="الرسالة المشفرة...">
-        <button onclick="initiateTransfer()">بدء النقل 3D</button>
+<div class="header-interface">
+    <div class="control-grid">
+        <input type="number" id="fromID" placeholder="ID المرسل">
+        <input type="number" id="toID" placeholder="ID المستقبل">
+        <input type="text" id="msgText" placeholder="أدخل البيانات المراد تشفيرها...">
+        <button onclick="startTransmission()">نقل البيانات</button>
     </div>
 </div>
 
-<div class="log" id="log">> نظام 3D جاهز للعمل...</div>
+<div class="terminal-log" id="terminal">> النظام الكروي متصل...</div>
 
 <script>
-    // إعداد الخريطة ثلاثية الأبعاد
+    // تهيئة الكرة الأرضية الحقيقية (Globe)
     const map = new maplibregl.Map({
         container: 'map',
         style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-        center: [38.06, 24.08], // البداية من ينبع
-        zoom: 3,
-        pitch: 60, // زاوية الإمالة لجعلها 3D
-        bearing: -10, // تدوير الخريطة قليلاً
+        center: [38.06, 24.08], // البداية من موقعك (ينبع)
+        zoom: 2,
+        pitch: 45,
         antialias: true
     });
 
+    // تفعيل وضع الكرة الأرضية الحقيقي
+    map.on('style.load', () => {
+        map.setProjection({ type: 'globe' });
+    });
+
     const users = {
-        "1": { name: "ينبع", coords: [38.0618, 24.0889] }, // [lng, lat] لـ MapLibre
+        "1": { name: "ينبع (أنت)", coords: [38.0618, 24.0889] },
         "2": { name: "لندن", coords: [-0.1278, 51.5074] },
         "3": { name: "نيويورك", coords: [-74.0060, 40.7128] },
         "4": { name: "طوكيو", coords: [139.6503, 35.6762] },
-        "5": { name: "سيدني", coords: [151.2093, -33.8688] }
+        "5": { name: "باريس", coords: [2.3522, 48.8566] }
     };
 
-    // إضافة المواقع كعلامات 3D
+    // وضع نقاط المستخدمين
     Object.values(users).forEach(u => {
         const el = document.createElement('div');
-        el.className = 'marker';
+        el.className = 'marker-point';
         new maplibregl.Marker(el).setLngLat(u.coords).addTo(map);
     });
 
-    function addLog(t) {
-        const l = document.getElementById('log');
-        l.innerHTML += `<div>> ${t}</div>`;
-        l.scrollTop = l.scrollHeight;
+    function log(t) {
+        const term = document.getElementById('terminal');
+        term.innerHTML += `<div>> ${t}</div>`;
+        term.scrollTop = term.scrollHeight;
     }
 
-    function initiateTransfer() {
-        const s = document.getElementById('sID').value;
-        const r = document.getElementById('rID').value;
-        const m = document.getElementById('msg').value || "Packet";
+    function startTransmission() {
+        const sID = document.getElementById('fromID').value;
+        const rID = document.getElementById('toID').value;
+        const msg = document.getElementById('msgText').value || "Encrypted_File";
 
-        if(!users[s] || !users[r]) {
-            addLog("<span style='color:red'>خطأ في المعرفات</span>");
+        if(!users[sID] || !users[rID]) {
+            log("<span style='color:#ff4d4d'>خطأ: ID غير صالح</span>");
             return;
         }
 
-        const start = users[s].coords;
-        const end = users[r].coords;
+        const start = users[sID].coords;
+        const end = users[rID].coords;
 
-        addLog(`اتصال آمن: من ${users[s].name}...`);
+        log(`بدء الاتصال بين ${users[sID].name} و ${users[rID].name}`);
 
-        // ميزة الـ 3D: تحريك الكاميرا إلى نقطة الإرسال
-        map.flyTo({ center: start, zoom: 4, speed: 0.8 });
+        // تحريك الكاميرا في فضاء الكرة الأرضية
+        map.flyTo({ center: start, zoom: 3, speed: 1, curve: 1.5 });
 
-        // إنشاء الخط القوسي (Arc) لمحاكاة الإرسال عبر الأقمار الصناعية
-        const lineId = 'line-' + Math.random();
-        
+        // إضافة مصدر الخط
+        const lineId = 'route-' + Date.now();
         map.addSource(lineId, {
             'type': 'geojson',
             'data': {
                 'type': 'Feature',
-                'geometry': {
-                    'type': 'LineString',
-                    'coordinates': [start, start] // يبدأ من نقطة واحدة وينمو
-                }
+                'geometry': { 'type': 'LineString', 'coordinates': [start, start] }
             }
         });
 
@@ -171,39 +176,46 @@
             'id': lineId,
             'type': 'line',
             'source': lineId,
-            'layout': { 'line-cap': 'round', 'line-join': 'round' },
             'paint': {
                 'line-color': '#00f2ff',
-                'line-width': 3,
-                'line-opacity': 0.8,
-                'line-dasharray': [1, 2]
+                'line-width': 2.5,
+                'line-dasharray': [2, 1]
             }
         });
 
         let progress = 0;
-        function animate() {
-            progress += 0.02;
+        function animateLine() {
+            progress += 0.015;
             if (progress <= 1) {
-                const curLng = start[0] + (end[0] - start[0]) * progress;
-                const curLat = start[1] + (end[1] - start[1]) * progress;
+                const lng = start[0] + (end[0] - start[0]) * progress;
+                const lat = start[1] + (end[1] - start[1]) * progress;
                 
                 map.getSource(lineId).setData({
                     'type': 'Feature',
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': [start, [curLng, curLat]]
-                    }
+                    'geometry': { 'type': 'LineString', 'coordinates': [start, [lng, lat]] }
                 });
-                requestAnimationFrame(animate);
+                requestAnimationFrame(animateLine);
             } else {
-                addLog(`تم الاستلام في ${users[r].name}: ${m}`);
+                log(`تم استلام: <span style="color:#00f2ff">${msg}</span>`);
                 map.setPaintProperty(lineId, 'line-color', '#7000ff');
-                // تحريك الكاميرا للوجهة بعد الوصول
-                map.flyTo({ center: end, zoom: 4, speed: 0.8 });
+                map.flyTo({ center: end, zoom: 3, duration: 2000 });
             }
         }
-        animate();
+        animateLine();
     }
+
+    // إضافة دوران بسيط للكرة عند عدم التفاعل
+    let isSpinning = true;
+    function spinGlobe() {
+        if (isSpinning) {
+            const center = map.getCenter();
+            center.lng += 0.1;
+            map.setCenter(center);
+            requestAnimationFrame(spinGlobe);
+        }
+    }
+    spinGlobe();
+    map.on('mousedown', () => isSpinning = false);
 </script>
 
 </body>
