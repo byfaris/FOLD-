@@ -3,49 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SatChat | محادثة الأقمار</title>
+    <title>متجر عجلة الحظ 2026 | Lucky Wheel Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #0b0e14; color: white; margin: 0; display: flex; flex-direction: column; hieght: 100vh; }
-        header { background: #1a202c; padding: 15px; text-align: center; border-bottom: 2px solid #38bdf8; }
-        #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px; border-radius: 8px; max-width: 80%; }
-        .sent { background: #38bdf8; align-self: flex-start; color: black; }
-        .received { background: #2d3748; align-self: flex-end; }
-        .input-area { padding: 20px; background: #1a202c; display: flex; gap: 10px; }
-        input { flex: 1; padding: 10px; border-radius: 5px; border: none; }
-        button { background: #38bdf8; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #f093fb;
+            --bg: #0b0e14;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+
+        body {
+            background: radial-gradient(circle at center, #1a1f2c 0%, #0b0e14 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header Section */
+        header {
+            width: 100%;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        /* Main Game Container */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3rem;
+            margin-top: 4rem;
+            position: relative;
+        }
+
+        /* The Wheel Graphics */
+        .wheel-wrapper {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            border: 8px solid var(--border);
+            box-shadow: 0 0 50px rgba(0, 242, 254, 0.2);
+            padding: 10px;
+        }
+
+        #wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            background: var(--accent);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 10;
+            filter: drop-shadow(0 5px 15px rgba(240, 147, 251, 0.5));
+        }
+
+        /* Price & Button */
+        .spin-controls {
+            text-align: center;
+            background: var(--glass);
+            padding: 2rem;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+        }
+
+        .price-tag {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .spin-btn {
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            color: #000;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .spin-btn:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 15px 30px rgba(79, 172, 254, 0.6);
+        }
+
+        .spin-btn:disabled {
+            filter: grayscale(1);
+            cursor: not-allowed;
+        }
+
+        /* Winners Feed */
+        .winners-box {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            width: 250px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .winner-entry {
+            border-bottom: 1px solid var(--border);
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Result Modal */
+        #modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--bg);
+            padding: 3rem;
+            border-radius: 30px;
+            border: 2px solid var(--primary);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        @media (max-width: 500px) {
+            .wheel-wrapper { width: 320px; height: 320px; }
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <h2>SatChat 🛰️</h2>
-    <small id="status">الحالة: متصل عبر الشبكة المحلية</small>
-</header>
+    <header>
+        <div class="logo">NEO-SPIN 2026</div>
+        <p>جرب حظك في أكبر سحب رقمي في العالم</p>
+    </header>
 
-<div id="chat-box">
-    <div class="msg received">مرحباً! هل تسمعني؟ (عبر القمر الصناعي)</div>
-    <div class="msg sent">نعم، الإشارة قوية هنا.</div>
-</div>
+    <div class="game-container">
+        <div class="wheel-wrapper">
+            <div class="pointer"></div>
+            <canvas id="wheel"></canvas>
+        </div>
 
-<div class="input-area">
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
-    <button onclick="sendMessage()">إرسال</button>
-</div>
+        <div class="spin-controls">
+            <div class="price-tag">تكلفة الدوران: $4.99</div>
+            <button class="spin-btn" id="spinBtn">ابدأ الدوران الآن</button>
+            <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.6;">نظام عشوائي مشفر بالكامل</p>
+        </div>
+    </div>
 
-<script>
-    function sendMessage() {
-        const input = document.getElementById('messageInput');
-        if(input.value.trim() !== "") {
-            const chatBox = document.getElementById('chat-box');
-            const newMsg = document.createElement('div');
-            newMsg.className = 'msg sent';
-            newMsg.innerText = input.value;
-            chatBox.appendChild(newMsg);
-            input.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
+    <div class="winners-box" id="winners">
+        <h4 style="margin-bottom: 10px; color: var(--accent);">آخر الفائزين ⚡</h4>
+    </div>
+
+    <div id="modal">
+        <div class="modal-content">
+            <h2 id="winMsg">مبروك!</h2>
+            <p style="margin: 20px 0; font-size: 1.2rem;" id="prizeName"></p>
+            <button class="spin-btn" onclick="location.reload()">استلام الجائزة</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        
+        // توليد 200 جائزة رقمية متنوعة
+        const prizes = Array.from({ length: 200 }, (_, i) => ({
+            id: i,
+            name: [
+                "بطاقة Amazon $50", "حساب Netflix", "1000 Crypto Coin", 
+                "كود خصم 90%", "اشتراك Spotify", "iPhone 15 Pro Max",
+                "رصيد $5", "رصيد $10", "لعبة Steam عشوائية"
+            ][Math.floor(Math.random() * 9)] + ` #${i+1}`,
+            color: i % 2 === 0 ? '#0b0e14' : '#1a1f2c'
+        }));
+
+        const totalPrizes = 8; // نعرض 8 فقط على العجلة في كل مرة للتصميم
+        let currentRotation = 0;
+
+        function drawWheel() {
+            const size = canvas.width = 450;
+            const center = size / 2;
+            const arc = (Math.PI * 2) / totalPrizes;
+
+            for (let i = 0; i < totalPrizes; i++) {
+                const angle = i * arc;
+                ctx.beginPath();
+                ctx.fillStyle = i % 2 === 0 ? '#4facfe' : '#00f2fe';
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, center - 10, angle, angle + arc);
+                ctx.fill();
+                ctx.stroke();
+
+                // إضافة نصوص الجوائز
+                ctx.save();
+                ctx.translate(center, center);
+                ctx.rotate(angle + arc / 2);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 14px Tajawal";
+                ctx.fillText(prizes[i].name.substring(0, 15), 100, 10);
+                ctx.restore();
+            }
         }
-    }
-</script>
+
+        spinBtn.addEventListener('click', () => {
+            spinBtn.disabled = true;
+            
+            // محاكاة دفع 4.99 (يمكن ربطها بـ Stripe أو PayPal هنا)
+            const randomDegree = Math.floor(Math.random() * 360) + (360 * 10); 
+            currentRotation += randomDegree;
+            
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                const actualDegree = currentRotation % 360;
+                const winningIndex = Math.floor((360 - actualDegree) / (360 / totalPrizes)) % totalPrizes;
+                
+                showWinner(prizes[winningIndex].name);
+            }, 5000);
+        });
+
+        function showWinner(name) {
+            document.getElementById('modal').style.display = 'flex';
+            document.getElementById('prizeName').innerText = name;
+        }
+
+        // محاكاة تغذية الفائزين المباشرة
+        function fakeWinners() {
+            const names = ['سارة', 'احمد', 'Elon', 'Satoshi', 'خالد'];
+            const winnersDiv = document.getElementById('winners');
+            setInterval(() => {
+                const entry = document.createElement('div');
+                entry.className = 'winner-entry';
+                entry.innerHTML = `<span>${names[Math.floor(Math.random()*names.length)]}</span> <span>فاز بـ $${(Math.random()*100).toFixed(0)}</span>`;
+                winnersDiv.prepend(entry);
+                if(winnersDiv.children.length > 6) winnersDiv.lastChild.remove();
+            }, 4000);
+        }
+
+        drawWheel();
+        fakeWinners();
+    </script>
 </body>
 </html>
