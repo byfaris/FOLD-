@@ -23,7 +23,7 @@
             transition: all 0.3s ease;
         }
 
-        /* حاوية الموقع - تدعم جميع الأجهزة */
+        /* حاوية الموقع الرئيسية - تدعم جميع الأجهزة */
         .app-container {
             display: flex;
             flex-direction: column;
@@ -59,63 +59,81 @@
             cursor: pointer;
             font-family: inherit;
             border-radius: 5px;
+            font-weight: bold;
         }
 
-        /* منطقة اللعبة (المدينة النيون) */
+        /* منطقة اللعبة المركزية */
         .game-world {
             flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
-            margin-top: 50px;
-            border: 1px dashed #333;
-            border-radius: 20px;
+            margin-top: 40px;
+            border: 2px solid #1a1a1a;
+            border-radius: 30px;
             background: radial-gradient(circle, #111 0%, #000 100%);
+            box-shadow: inset 0 0 50px #000;
+            position: relative;
         }
 
         .hero-text h1 {
             font-size: 3rem;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-shadow: 0 0 20px var(--neon-green);
+            animation: pulse 2s infinite;
         }
 
-        /* أزرار الأكشن */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        /* أزرار الأكشن المستقبلي */
         .main-btn {
             background: var(--neon-green);
             color: black;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
+            padding: 18px 45px;
+            font-size: 1.3rem;
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 0 20px var(--neon-green);
-            transition: transform 0.2s;
+            box-shadow: 0 0 25px var(--neon-green);
+            transition: 0.3s;
+            margin-top: 20px;
         }
 
         .main-btn:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--neon-green);
         }
 
-        /* شريط العملات الحي (Ticker) */
+        /* شريط العملات المباشر (القلب النابض) */
         .ticker-wrap {
             width: 100%;
             overflow: hidden;
-            background: #111;
-            padding: 10px 0;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 0;
             margin-top: 20px;
+            border-top: 1px solid #333;
         }
 
         .ticker {
             display: flex;
             white-space: nowrap;
-            animation: marquee 20s linear infinite;
+            animation: marquee 25s linear infinite;
         }
 
         .ticker-item {
-            margin: 0 20px;
-            color: var(--neon-green);
+            margin: 0 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         @keyframes marquee {
@@ -123,10 +141,12 @@
             100% { transform: translateX(-100%); }
         }
 
-        /* استجابة للهواتف */
+        /* استجابة للهواتف المحمولة */
         @media (max-width: 600px) {
             .hero-text h1 { font-size: 1.8rem; }
             .logo { font-size: 1rem; }
+            .main-btn { padding: 12px 30px; font-size: 1rem; }
+            header { flex-direction: row; }
         }
     </style>
 </head>
@@ -143,23 +163,23 @@
         <main class="game-world">
             <div class="hero-text">
                 <h1 id="mainTitle">ابنِ إمبراطوريتك الرقمية</h1>
-                <p id="subTitle">حوّل تحركات السوق إلى قوة وسيطرة</p>
+                <p id="subTitle" style="color: #888;">حوّل تحركات السوق إلى قوة وسيطرة</p>
                 <button class="main-btn" id="startBtn">ابدأ الغزو الآن</button>
             </div>
         </main>
 
         <div class="ticker-wrap">
-            <div class="ticker">
-                <span class="ticker-item">BTC: $95,432 ▲</span>
-                <span class="ticker-item">ETH: $2,841 ▲</span>
-                <span class="ticker-item">SOL: $145 ▼</span>
-                <span class="ticker-item">BNB: $590 ▲</span>
+            <div class="ticker" id="ticker-content">
+                <span class="ticker-item" id="btc-price">BTC: $...</span>
+                <span class="ticker-item" id="eth-price">ETH: $...</span>
+                <span class="ticker-item" id="sol-price">SOL: $...</span>
+                <span class="ticker-item" id="bnb-price">BNB: $...</span>
             </div>
         </div>
     </div>
 
     <script>
-        // نظام تبديل اللغات الذكي
+        // 1. نظام تبديل اللغات
         let currentLang = 'ar';
         const content = {
             ar: {
@@ -184,6 +204,36 @@
             document.getElementById('subTitle').innerText = content[currentLang].sub;
             document.getElementById('startBtn').innerText = content[currentLang].btn;
         }
+
+        // 2. ربط بيانات السوق الحية (Binance WebSocket)
+        const symbols = ['btcusdt', 'ethusdt', 'solusdt', 'bnbusdt'];
+        const socketUrl = `wss://stream.binance.com:9443/ws/${symbols.map(s => s + '@ticker').join('/')}`;
+        const binanceSocket = new WebSocket(socketUrl);
+
+        binanceSocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const symbol = data.s; // الرمز (مثلاً BTCUSDT)
+            const price = parseFloat(data.c).toFixed(2); // السعر الحالي
+            const change = parseFloat(data.P).toFixed(2); // نسبة التغير 24 ساعة
+
+            if (symbol === "BTCUSDT") updateUI("btc-price", "BTC", price, change);
+            if (symbol === "ETHUSDT") updateUI("eth-price", "ETH", price, change);
+            if (symbol === "SOLUSDT") updateUI("sol-price", "SOL", price, change);
+            if (symbol === "BNBUSDT") updateUI("bnb-price", "BNB", price, change);
+        };
+
+        function updateUI(id, label, price, change) {
+            const el = document.getElementById(id);
+            if (el) {
+                const icon = change >= 0 ? "▲" : "▼";
+                const color = change >= 0 ? "var(--neon-green)" : "var(--neon-red)";
+                el.innerHTML = `${label}: $${price} <span style="font-size: 0.8rem; margin-left:5px;">${icon} ${change}%</span>`;
+                el.style.color = color;
+                el.style.textShadow = `0 0 10px ${color}`;
+            }
+        }
+
+        binanceSocket.onerror = (err) => console.error("خطأ في الاتصال بالبيانات:", err);
     </script>
 </body>
 </html>
