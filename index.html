@@ -2,102 +2,46 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Spatial Vault | القبو المكاني</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <title>إيداع القبو المكاني | Secret Deposit</title>
     <style>
-        :root {
-            --security-red: #ff003c;
-            --security-green: #00f2ff;
-            --bg-black: #0a0a0a;
-        }
-
-        body {
-            background-color: var(--bg-black);
-            color: white;
-            font-family: 'Tajawal', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        .vault-box {
-            text-align: center;
-            border: 2px solid var(--security-green);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .radar-scan {
-            width: 150px;
-            height: 150px;
-            border: 2px solid var(--security-green);
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            position: relative;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(0, 242, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
-        }
-
-        .status-text {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--security-green);
-            margin-top: 15px;
-            letter-spacing: 2px;
-        }
-
-        .locked {
-            color: var(--security-red);
-            text-shadow: 0 0 10px var(--security-red);
-        }
+        :root { --neon-cyan: #00f2ff; --bg: #050505; }
+        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .map-preview { width: 100%; max-width: 600px; height: 300px; border: 1px solid var(--neon-cyan); margin-bottom: 20px; border-radius: 15px; position: relative; background: #111; }
+        .upload-area { border: 2px dashed var(--neon-cyan); padding: 40px; border-radius: 15px; cursor: pointer; transition: 0.3s; width: 100%; max-width: 520px; text-align: center; }
+        .upload-area:hover { background: rgba(0, 242, 255, 0.1); }
+        .stats { margin-top: 20px; font-family: monospace; color: var(--neon-cyan); }
     </style>
 </head>
 <body>
 
-    <div class="vault-box">
-        <div class="radar-scan" id="radar"></div>
-        <h2 id="statusTitle">جاري فحص الإحداثيات المكانية...</h2>
-        <div class="status-text" id="coords">LAT: --.---- | LON: --.----</div>
-        <p id="message" style="color: #666; margin-top: 20px;">الوصول مقيد جغرافياً. يرجى التواجد في المنطقة المعتمدة لفك التشفير.</p>
+    <h1 style="color: var(--neon-cyan);">إنشاء قفل مكاني جديد</h1>
+    
+    <div class="map-preview" id="map">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            جاري تحديد موقعك الدقيق...
+        </div>
+    </div>
+
+    <div class="upload-area" id="dropZone">
+        <h3>اسحب ملفاتك السرية هنا</h3>
+        <p>سيتم تفتيت البيانات وربطها بإحداثيات موقعك الحالي فوراً</p>
+    </div>
+
+    <div class="stats" id="locationData">
+        الإحداثيات المستهدفة: LAT: -- | LON: --
     </div>
 
     <script>
-        // دالة جلب الموقع الحقيقي
-        function checkSpatialSecurity() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(showPosition, showError);
-            } else {
-                alert("جهازك لا يدعم تقنية الأمن المكاني.");
-            }
+        // دالة جلب الموقع الدقيق (مثل المواقع في ينبع)
+        function getFineLocation() {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                document.getElementById('locationData').innerText = 
+                    `الإحداثيات المستهدفة: LAT: ${lat.toFixed(6)} | LON: ${lon.toFixed(6)}`;
+            });
         }
-
-        function showPosition(position) {
-            const lat = position.coords.latitude.toFixed(4);
-            const lon = position.coords.longitude.toFixed(4);
-            document.getElementById('coords').innerText = `LAT: ${lat} | LON: ${lon}`;
-            
-            // هنا نضع "المنطق الغامض": إذا لم يكن في إحداثيات معينة، يبقى القبو مغلقاً
-            // لنفترض أننا نريد الموقع في ينبع مثلاً (هنا نضع إحداثيات تجريبية)
-            // if (lat == 24.0891 && lon == 38.0637) { ... }
-        }
-
-        function showError(error) {
-            document.getElementById('statusTitle').innerText = "خطأ في التتبع الجغرافي";
-            document.getElementById('statusTitle').className = "locked";
-        }
-
-        checkSpatialSecurity();
+        getFineLocation();
     </script>
 </body>
 </html>
