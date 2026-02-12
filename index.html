@@ -2,75 +2,145 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Global Spatial Vault | القبو المكاني العالمي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spatial Vault | الرادار المكاني</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon-cyan: #00f2ff; --bg: #050505; --text: #e0e0e0; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; transition: 0.3s; padding: 40px; }
-        .container { max-width: 800px; margin: auto; text-align: center; }
-        
-        /* تصميم زر اللغات */
-        .lang-bar { margin-bottom: 30px; display: flex; justify-content: center; gap: 10px; }
-        .lang-bar button { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 8px 15px; cursor: pointer; border-radius: 4px; }
-        .lang-bar button:hover { background: var(--neon-cyan); color: black; }
+        :root { --cyan: #00f2ff; --bg: #050505; --red: #ff003c; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background: var(--bg); color: white; margin: 0; 
+            font-family: 'Tajawal', sans-serif; height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
 
-        .sharding-box { border: 2px solid var(--neon-cyan); padding: 50px; border-radius: 20px; background: rgba(0, 242, 255, 0.05); position: relative; overflow: hidden; }
-        .shard-animation { display: none; margin-top: 20px; font-family: monospace; font-size: 12px; color: var(--neon-cyan); }
+        /* الهيدر المتجاوب */
+        header {
+            padding: 15px; background: rgba(0,0,0,0.9);
+            border-bottom: 1px solid var(--cyan);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .lang-btns button {
+            background: transparent; border: 1px solid var(--cyan);
+            color: var(--cyan); padding: 5px 10px; border-radius: 4px;
+            font-size: 12px; cursor: pointer; margin-left: 5px;
+        }
+
+        /* نظام الرادار المركزي */
+        .radar-container {
+            flex-grow: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; position: relative;
+        }
+
+        .radar {
+            width: 280px; height: 280px; border-radius: 50%;
+            border: 2px solid var(--cyan); position: relative;
+            background: radial-gradient(circle, rgba(0,242,255,0.1) 0%, transparent 70%);
+            box-shadow: 0 0 20px rgba(0,242,255,0.2);
+        }
+
+        .radar::after {
+            content: ''; position: absolute; width: 100%; height: 50%;
+            top: 0; left: 0; background: linear-gradient(to top, var(--cyan), transparent);
+            border-top: 2px solid var(--cyan); border-radius: 140px 140px 0 0;
+            transform-origin: bottom center;
+            animation: sweep 4s linear infinite; opacity: 0.3;
+        }
+
+        @keyframes sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .blip {
+            width: 10px; height: 10px; background: var(--cyan);
+            border-radius: 50%; position: absolute;
+            top: 40%; left: 60%; box-shadow: 0 0 15px var(--cyan);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* منطقة البيانات */
+        .info-panel {
+            padding: 20px; background: rgba(10,10,10,0.9);
+            border-top: 1px solid var(--cyan); text-align: center;
+        }
+
+        #coords { font-family: 'Orbitron', sans-serif; color: var(--cyan); font-size: 14px; }
+
+        .btn-action {
+            background: var(--cyan); color: black; border: none;
+            padding: 15px 40px; border-radius: 50px; font-weight: bold;
+            margin-top: 15px; cursor: pointer; width: 100%; max-width: 300px;
+        }
+
+        /* تعديلات للأجهزة الصغيرة */
+        @media (max-width: 400px) {
+            .radar { width: 220px; height: 220px; }
+            header h2 { font-size: 16px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="lang-bar">
-        <button onclick="setLang('ar')">العربية</button>
-        <button onclick="setLang('en')">English</button>
-        <button onclick="setLang('ru')">Русский</button>
-        <button onclick="setLang('zh')">中文</button>
+<header>
+    <h2 id="logo" style="margin:0; font-family:'Orbitron'; color:var(--cyan);">SPATIAL VAULT</h2>
+    <div class="lang-btns">
+        <button onclick="changeLang('ar')">AR</button>
+        <button onclick="changeLang('en')">EN</button>
+        <button onclick="changeLang('ru')">RU</button>
+        <button onclick="changeLang('zh')">ZH</button>
     </div>
+</header>
 
-    <div class="sharding-box">
-        <h1 id="title">تأمين الأصول المكانية</h1>
-        <p id="desc">قم بسحب الملف لتفتيته وربطه بإحداثياتك الحالية.</p>
-        
-        <input type="file" id="fileInput" style="display:none" onchange="startSharding()">
-        <button onclick="document.getElementById('fileInput').click()" 
-                style="background: var(--neon-cyan); color:black; padding:15px 30px; border:none; border-radius:30px; font-weight:bold; cursor:pointer;">
-            <span id="btnText">اختر الملف السري</span>
-        </button>
-
-        <div id="status" class="shard-animation"></div>
+<div class="radar-container">
+    <div class="radar">
+        <div class="blip"></div>
     </div>
+    <p id="status" style="margin-top:20px; font-weight:bold;">جاري فحص النطاق الجغرافي...</p>
+</div>
+
+<div class="info-panel">
+    <div id="coords">LAT: --.---- | LON: --.----</div>
+    <button class="btn-action" id="actionBtn" onclick="requestAccess()">طلب فك التشفير المكاني</button>
 </div>
 
 <script>
-    const translations = {
-        ar: { title: "تأمين الأصول المكانية", desc: "قم بسحب الملف لتفتيته وربطه بإحداثياتك الحالية.", btn: "اختر الملف السري", sharding: "جاري تفتيت البيانات وتوزيعها عالمياً...", dir: "rtl" },
-        en: { title: "Spatial Asset Security", desc: "Drag file to fragment and bind to your current coordinates.", btn: "Select Secret File", sharding: "Fragmenting and distributing data globally...", dir: "ltr" },
-        ru: { title: "Пространственная безопасность", desc: "Перетащите файл для фрагментации и привязки к координатам.", btn: "Выбрать секретный файл", sharding: "Фрагментация и глобальное распределение данных...", dir: "ltr" },
-        zh: { title: "空间资产安全", desc: "拖动文件以进行碎片化并绑定到您当前的坐标。", btn: "选择机密文件", sharding: "正在全球范围内碎片化和分发数据...", dir: "ltr" }
+    const langData = {
+        ar: { status: "جاري فحص النطاق الجغرافي...", btn: "طلب فك التشفير المكاني", err: "خارج النطاق المعتمد", dir: "rtl" },
+        en: { status: "Scanning Spatial Range...", btn: "Request Spatial Decrypt", err: "Out of Authorized Zone", dir: "ltr" },
+        ru: { status: "Сканирование диапазона...", btn: "Запрос дешифрования", err: "Вне авторизованной зоны", dir: "ltr" },
+        zh: { status: "扫描空间范围...", btn: "请求空间解密", err: "超出授权区域", dir: "ltr" }
     };
 
-    function setLang(lang) {
-        const t = translations[lang];
-        document.getElementById('title').innerText = t.title;
-        document.getElementById('desc').innerText = t.desc;
-        document.getElementById('btnText').innerText = t.btn;
-        document.documentElement.dir = t.dir;
-        document.documentElement.lang = lang;
+    let currentLang = 'ar';
+
+    function changeLang(l) {
+        currentLang = l;
+        const d = langData[l];
+        document.getElementById('status').innerText = d.status;
+        document.getElementById('actionBtn').innerText = d.btn;
+        document.body.style.direction = d.dir;
     }
 
-    function startSharding() {
-        const status = document.getElementById('status');
-        status.style.display = 'block';
-        const lang = document.documentElement.lang || 'ar';
-        status.innerText = translations[lang].sharding;
-        
-        // محاكاة عملية التفتيت
-        for(let i=0; i<10; i++) {
-            setTimeout(() => {
-                status.innerText += `\nShard_${i} -> Encrypted with Geo-Key [SUCCESS]`;
-            }, i * 500);
+    function initSpatial() {
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition((p) => {
+                const lat = p.coords.latitude.toFixed(4);
+                const lon = p.coords.longitude.toFixed(4);
+                document.getElementById('coords').innerText = `LAT: ${lat} | LON: ${lon}`;
+                // منطق التفرد: هنا يتم مطابقة الموقع مع المفتاح المخزن
+            });
         }
     }
+
+    function requestAccess() {
+        alert(langData[currentLang].err);
+    }
+
+    initSpatial();
 </script>
 
 </body>
