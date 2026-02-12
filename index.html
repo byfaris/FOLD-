@@ -2,188 +2,102 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crypto Empire | War Map</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Spatial Vault | القبو المكاني</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --neon-green: #00ff88;
-            --neon-red: #ff3e3e;
-            --neon-blue: #00d4ff;
-            --dark-bg: #020202;
+            --security-red: #ff003c;
+            --security-green: #00f2ff;
+            --bg-black: #0a0a0a;
         }
 
-        body, html {
-            margin: 0; padding: 0;
-            background-color: var(--dark-bg);
-            color: white; font-family: 'Tajawal', sans-serif;
-            height: 100%; overflow: hidden;
+        body {
+            background-color: var(--bg-black);
+            color: white;
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
 
-        /* حاوية الخريطة - قابلة للسحب */
-        #map-container {
-            width: 100vw; height: 100vh;
-            cursor: grab; overflow: hidden;
+        .vault-box {
+            text-align: center;
+            border: 2px solid var(--security-green);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .radar-scan {
+            width: 150px;
+            height: 150px;
+            border: 2px solid var(--security-green);
+            border-radius: 50%;
+            margin: 0 auto 20px;
             position: relative;
-            background: 
-                linear-gradient(90deg, rgba(0,212,255,0.05) 1px, transparent 1px),
-                linear-gradient(rgba(0,212,255,0.05) 1px, transparent 1px);
-            background-size: 50px 50px; /* شبكة النيون */
+            animation: pulse 2s infinite;
         }
 
-        #world {
-            width: 2000px; height: 2000px; /* مساحة الخريطة الكبيرة */
-            position: absolute; top: 0; left: 0;
-            transition: transform 0.1s ease-out;
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(0, 242, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
         }
 
-        /* تصميم الأبراج */
-        .tower {
-            position: absolute;
-            width: 60px; height: 120px;
-            background: linear-gradient(to top, var(--neon-blue), transparent);
-            border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 20px var(--neon-blue);
-            display: flex; flex-direction: column;
-            justify-content: flex-end; align-items: center;
-            border-radius: 5px 5px 0 0;
+        .status-text {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--security-green);
+            margin-top: 15px;
+            letter-spacing: 2px;
         }
 
-        .tower-label {
-            position: absolute; top: -30px;
-            font-family: 'Orbitron', sans-serif; font-size: 0.8rem;
-            color: white; text-shadow: 0 0 5px var(--neon-blue);
-        }
-
-        /* الرادار الصغير */
-        #radar {
-            position: fixed; top: 80px; right: 20px;
-            width: 100px; height: 100px;
-            border-radius: 50%; border: 1px solid var(--neon-green);
-            background: rgba(0, 255, 136, 0.1);
-            z-index: 1000;
-        }
-
-        #radar::after {
-            content: ''; position: absolute; width: 100%; height: 2px;
-            background: var(--neon-green); top: 50%;
-            animation: radar-sweep 2s linear infinite;
-        }
-
-        @keyframes radar-sweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* شريط العملات الثابت */
-        .ticker-wrap {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(0, 0, 0, 0.9); border-top: 1px solid #222;
-            padding: 10px 0; z-index: 2000;
-        }
-
-        header {
-            position: fixed; top: 0; width: 100%; z-index: 2000;
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.8); padding: 10px 20px; box-sizing: border-box;
-            border-bottom: 1px solid var(--neon-blue);
-        }
-
-        .lang-switch button {
-            background: transparent; border: 1px solid var(--neon-green);
-            color: var(--neon-green); padding: 5px 10px; border-radius: 5px; cursor: pointer;
+        .locked {
+            color: var(--security-red);
+            text-shadow: 0 0 10px var(--security-red);
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div style="font-family:'Orbitron'; color:var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue);">CRYPTO EMPIRE</div>
-        <div class="lang-switch"><button onclick="toggleLang()">AR / EN</button></div>
-    </header>
-
-    <div id="radar"></div>
-
-    <div id="map-container">
-        <div id="world">
-            <div class="tower" style="top: 1000px; left: 1000px;" id="tower-BTC">
-                <div class="tower-label">BITCOIN</div>
-            </div>
-            <div class="tower" style="top: 800px; left: 1200px;" id="tower-ETH">
-                <div class="tower-label">ETHEREUM</div>
-            </div>
-            <div class="tower" style="top: 1100px; left: 850px;" id="tower-SOL">
-                <div class="tower-label">SOLANA</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="ticker-wrap">
-        <marquee scrollamount="5" direction="right" id="ticker-text" style="font-family:'Orbitron'; color:var(--neon-green);">
-            BTC: $... | ETH: $... | SOL: $... | BNB: $...
-        </marquee>
+    <div class="vault-box">
+        <div class="radar-scan" id="radar"></div>
+        <h2 id="statusTitle">جاري فحص الإحداثيات المكانية...</h2>
+        <div class="status-text" id="coords">LAT: --.---- | LON: --.----</div>
+        <p id="message" style="color: #666; margin-top: 20px;">الوصول مقيد جغرافياً. يرجى التواجد في المنطقة المعتمدة لفك التشفير.</p>
     </div>
 
     <script>
-        // نظام تحريك الخريطة (Drag to Scroll)
-        const container = document.getElementById('map-container');
-        const world = document.getElementById('world');
-        let isDragging = false;
-        let startX, startY, scrollLeft, scrollTop;
-
-        container.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.pageX - world.offsetLeft;
-            startY = e.pageY - world.offsetTop;
-            container.style.cursor = 'grabbing';
-        });
-
-        window.addEventListener('mouseup', () => {
-            isDragging = false;
-            container.style.cursor = 'grab';
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const x = e.pageX - startX;
-            const y = e.pageY - startY;
-            world.style.left = `${x}px`;
-            world.style.top = `${y}px`;
-        });
-
-        // دعم اللمس للجوال
-        container.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            startX = e.touches[0].pageX - world.offsetLeft;
-            startY = e.touches[0].pageY - world.offsetTop;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const x = e.touches[0].pageX - startX;
-            const y = e.touches[0].pageY - startY;
-            world.style.left = `${x}px`;
-            world.style.top = `${y}px`;
-        });
-
-        // ربط الأسعار الحية لتغيير حجم الأبراج
-        function updatePrices() {
-            const socket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker/ethusdt@ticker/solusdt@ticker');
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                const coin = data.s.replace('USDT', '');
-                const change = parseFloat(data.P);
-                const tower = document.getElementById(`tower-${coin}`);
-                
-                if (tower) {
-                    // إذا كان السعر صاعد، البرج يطول ويتوهج أكثر
-                    const height = 120 + (change * 2);
-                    tower.style.height = `${height}px`;
-                    tower.style.boxShadow = `0 0 ${20 + change}px ${change >= 0 ? 'var(--neon-green)' : 'var(--neon-red)'}`;
-                    tower.style.background = `linear-gradient(to top, ${change >= 0 ? 'var(--neon-green)' : 'var(--neon-red)'}, transparent)`;
-                }
-            };
+        // دالة جلب الموقع الحقيقي
+        function checkSpatialSecurity() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(showPosition, showError);
+            } else {
+                alert("جهازك لا يدعم تقنية الأمن المكاني.");
+            }
         }
 
-        updatePrices();
+        function showPosition(position) {
+            const lat = position.coords.latitude.toFixed(4);
+            const lon = position.coords.longitude.toFixed(4);
+            document.getElementById('coords').innerText = `LAT: ${lat} | LON: ${lon}`;
+            
+            // هنا نضع "المنطق الغامض": إذا لم يكن في إحداثيات معينة، يبقى القبو مغلقاً
+            // لنفترض أننا نريد الموقع في ينبع مثلاً (هنا نضع إحداثيات تجريبية)
+            // if (lat == 24.0891 && lon == 38.0637) { ... }
+        }
+
+        function showError(error) {
+            document.getElementById('statusTitle').innerText = "خطأ في التتبع الجغرافي";
+            document.getElementById('statusTitle').className = "locked";
+        }
+
+        checkSpatialSecurity();
     </script>
 </body>
 </html>
