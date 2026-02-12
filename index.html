@@ -185,5 +185,30 @@
             document.getElementById('startBtn').innerText = content[currentLang].btn;
         }
     </script>
+    // عنوان الاتصال المباشر بمنصة بايننس
+const binanceSocket = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@ticker/ethusdt@ticker/solusdt@ticker");
+
+binanceSocket.onmessage = (event) => {
+    let data = JSON.parse(event.data);
+    let symbol = data.s; // اسم العملة
+    let price = parseFloat(data.c).toFixed(2); // السعر الحالي
+    let change = parseFloat(data.P).toFixed(2); // نسبة التغير
+
+    // تحديث البيانات في شريط النيون السفلي
+    if (symbol === "BTCUSDT") {
+        updateTicker("btc-price", price, change);
+    } else if (symbol === "ETHUSDT") {
+        updateTicker("eth-price", price, change);
+    }
+};
+
+function updateTicker(id, price, change) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.innerHTML = `${id.split('-')[0].toUpperCase()}: $${price} (${change}%)`;
+        element.style.color = change >= 0 ? "var(--neon-green)" : "var(--neon-red)";
+    }
+}
+
 </body>
 </html>
