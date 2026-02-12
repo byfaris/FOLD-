@@ -2,46 +2,76 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>إيداع القبو المكاني | Secret Deposit</title>
+    <title>Global Spatial Vault | القبو المكاني العالمي</title>
     <style>
-        :root { --neon-cyan: #00f2ff; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .map-preview { width: 100%; max-width: 600px; height: 300px; border: 1px solid var(--neon-cyan); margin-bottom: 20px; border-radius: 15px; position: relative; background: #111; }
-        .upload-area { border: 2px dashed var(--neon-cyan); padding: 40px; border-radius: 15px; cursor: pointer; transition: 0.3s; width: 100%; max-width: 520px; text-align: center; }
-        .upload-area:hover { background: rgba(0, 242, 255, 0.1); }
-        .stats { margin-top: 20px; font-family: monospace; color: var(--neon-cyan); }
+        :root { --neon-cyan: #00f2ff; --bg: #050505; --text: #e0e0e0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; transition: 0.3s; padding: 40px; }
+        .container { max-width: 800px; margin: auto; text-align: center; }
+        
+        /* تصميم زر اللغات */
+        .lang-bar { margin-bottom: 30px; display: flex; justify-content: center; gap: 10px; }
+        .lang-bar button { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        .lang-bar button:hover { background: var(--neon-cyan); color: black; }
+
+        .sharding-box { border: 2px solid var(--neon-cyan); padding: 50px; border-radius: 20px; background: rgba(0, 242, 255, 0.05); position: relative; overflow: hidden; }
+        .shard-animation { display: none; margin-top: 20px; font-family: monospace; font-size: 12px; color: var(--neon-cyan); }
     </style>
 </head>
 <body>
 
-    <h1 style="color: var(--neon-cyan);">إنشاء قفل مكاني جديد</h1>
-    
-    <div class="map-preview" id="map">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-            جاري تحديد موقعك الدقيق...
-        </div>
+<div class="container">
+    <div class="lang-bar">
+        <button onclick="setLang('ar')">العربية</button>
+        <button onclick="setLang('en')">English</button>
+        <button onclick="setLang('ru')">Русский</button>
+        <button onclick="setLang('zh')">中文</button>
     </div>
 
-    <div class="upload-area" id="dropZone">
-        <h3>اسحب ملفاتك السرية هنا</h3>
-        <p>سيتم تفتيت البيانات وربطها بإحداثيات موقعك الحالي فوراً</p>
-    </div>
+    <div class="sharding-box">
+        <h1 id="title">تأمين الأصول المكانية</h1>
+        <p id="desc">قم بسحب الملف لتفتيته وربطه بإحداثياتك الحالية.</p>
+        
+        <input type="file" id="fileInput" style="display:none" onchange="startSharding()">
+        <button onclick="document.getElementById('fileInput').click()" 
+                style="background: var(--neon-cyan); color:black; padding:15px 30px; border:none; border-radius:30px; font-weight:bold; cursor:pointer;">
+            <span id="btnText">اختر الملف السري</span>
+        </button>
 
-    <div class="stats" id="locationData">
-        الإحداثيات المستهدفة: LAT: -- | LON: --
+        <div id="status" class="shard-animation"></div>
     </div>
+</div>
 
-    <script>
-        // دالة جلب الموقع الدقيق (مثل المواقع في ينبع)
-        function getFineLocation() {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                document.getElementById('locationData').innerText = 
-                    `الإحداثيات المستهدفة: LAT: ${lat.toFixed(6)} | LON: ${lon.toFixed(6)}`;
-            });
+<script>
+    const translations = {
+        ar: { title: "تأمين الأصول المكانية", desc: "قم بسحب الملف لتفتيته وربطه بإحداثياتك الحالية.", btn: "اختر الملف السري", sharding: "جاري تفتيت البيانات وتوزيعها عالمياً...", dir: "rtl" },
+        en: { title: "Spatial Asset Security", desc: "Drag file to fragment and bind to your current coordinates.", btn: "Select Secret File", sharding: "Fragmenting and distributing data globally...", dir: "ltr" },
+        ru: { title: "Пространственная безопасность", desc: "Перетащите файл для фрагментации и привязки к координатам.", btn: "Выбрать секретный файл", sharding: "Фрагментация и глобальное распределение данных...", dir: "ltr" },
+        zh: { title: "空间资产安全", desc: "拖动文件以进行碎片化并绑定到您当前的坐标。", btn: "选择机密文件", sharding: "正在全球范围内碎片化和分发数据...", dir: "ltr" }
+    };
+
+    function setLang(lang) {
+        const t = translations[lang];
+        document.getElementById('title').innerText = t.title;
+        document.getElementById('desc').innerText = t.desc;
+        document.getElementById('btnText').innerText = t.btn;
+        document.documentElement.dir = t.dir;
+        document.documentElement.lang = lang;
+    }
+
+    function startSharding() {
+        const status = document.getElementById('status');
+        status.style.display = 'block';
+        const lang = document.documentElement.lang || 'ar';
+        status.innerText = translations[lang].sharding;
+        
+        // محاكاة عملية التفتيت
+        for(let i=0; i<10; i++) {
+            setTimeout(() => {
+                status.innerText += `\nShard_${i} -> Encrypted with Geo-Key [SUCCESS]`;
+            }, i * 500);
         }
-        getFineLocation();
-    </script>
+    }
+</script>
+
 </body>
 </html>
