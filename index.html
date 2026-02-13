@@ -1,85 +1,158 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Real Spatial Vault</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <title>THE NEXUS // LIVE</title>
     <style>
-        :root { --neon: #00f2ff; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
-        .vault-status { border: 2px solid var(--neon); padding: 20px; border-radius: 15px; margin: 20px auto; max-width: 500px; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; background: #111; border: 1px solid var(--neon); color: white; border-radius: 5px; }
-        button { background: var(--neon); color: black; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; width: 100%; }
-        .success { color: #00ff88; font-weight: bold; }
+        :root {
+            --neon-green: #00ff41;
+            --dim-green: #003b00;
+            --bg-black: #050505;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.4;
+        }
+
+        /* Scanline effect for mystery */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            border-bottom: 1px solid var(--neon-green);
+            margin-bottom: 10px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* Pinned Stories */
+        #pinned-area {
+            margin-bottom: 40px;
+        }
+
+        .news-item {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--dim-green);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .pinned-item {
+            background-color: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid var(--neon-green);
+            padding-left: 10px;
+        }
+
+        .timestamp {
+            color: var(--dim-green);
+            font-size: 0.8rem;
+            min-width: 150px;
+        }
+
+        .headline {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .headline:hover {
+            text-decoration: underline;
+            color: white;
+        }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
-    <h1>القبو المكاني الحقيقي (Spatial Vault)</h1>
-    
-    <div class="vault-status">
-        <div id="gps-info">جاري تحديد موقعك بدقة...</div>
-        <hr border="0.5" color="#222">
-        
-        <h3>إيداع سر جديد</h3>
-        <textarea id="secretInput" placeholder="اكتب سرك هنا (كلمة سر محفظة، كود، إلخ)"></textarea>
-        <button onclick="lockSecret()">تشفير السر بموقعي الحالي</button>
-        
-        <hr border="0.5" color="#222">
-        
-        <h3>فك التشفير</h3>
-        <p id="encryptedDisplay" style="word-break: break-all; font-size: 10px; color: #666;"></p>
-        <button onclick="unlockSecret()" style="background: #555; color: white;">حاول الفتح من موقعك الحالي</button>
-        <h2 id="result"></h2>
+<div id="container">
+    <div class="section-label">[ PRIORITY_SIGNALS ]</div>
+    <div id="pinned-area">
+        <div class="news-item pinned-item">
+            <span class="headline">SYSTEM_ALERT: GLOBAL FIBER DEVIATION DETECTED</span>
+            <span class="timestamp">02:44:12 UTC</span>
+        </div>
+        <div class="news-item pinned-item">
+            <span class="headline">MARKET_VOLATILITY: BTC/SOL LIQUIDITY SPIKE</span>
+            <span class="timestamp">01:12:05 UTC</span>
+        </div>
     </div>
 
-    <script>
-        let savedLat, savedLon, encryptedData;
+    <div class="section-label">[ LIVE_STREAM <span class="blink">_</span> ]</div>
+    <div id="news-feed">
+        <div class="news-item">
+            <span class="headline">Unidentified satellite reentry over Pacific sector.</span>
+            <span class="timestamp">09:58:22</span>
+        </div>
+        <div class="news-item">
+            <span class="headline">Central bank API keys reportedly leaked on dark-web forum.</span>
+            <span class="timestamp">09:57:45</span>
+        </div>
+        <div class="news-item">
+            <span class="headline">Undersea cable maintenance scheduled for Yanbu corridor.</span>
+            <span class="timestamp">09:55:10</span>
+        </div>
+    </div>
+</div>
 
-        // جلب الموقع الحقيقي بدقة عالية
-        function getLocation() {
-            navigator.geolocation.watchPosition((p) => {
-                savedLat = p.coords.latitude.toFixed(6);
-                savedLon = p.coords.longitude.toFixed(6);
-                document.getElementById('gps-info').innerText = `الموقع الحالي المعتمد: ${savedLat} , ${savedLon}`;
-            }, null, {enableHighAccuracy: true});
+<script>
+    // Simple logic to simulate "fast updates"
+    const headlines = [
+        "Encrypted packet burst detected from Mars Reconnaissance Orbiter.",
+        "Quantum computing breakthrough bypasses standard AES-256.",
+        "Anomalous weather patterns forming over dead-zones.",
+        "Ghost-traffic detected on defunct server networks."
+    ];
+
+    function addNews() {
+        const feed = document.getElementById('news-feed');
+        const newItem = document.createElement('div');
+        newItem.className = 'news-item';
+        
+        const time = new Date().toLocaleTimeString();
+        const text = headlines[Math.floor(Math.random() * headlines.length)];
+        
+        newItem.innerHTML = `
+            <span class="headline">${text}</span>
+            <span class="timestamp">${time}</span>
+        `;
+        
+        feed.insertBefore(newItem, feed.firstChild);
+        
+        // Keep feed lean
+        if (feed.children.length > 20) {
+            feed.removeChild(feed.lastChild);
         }
+    }
 
-        // تشفير حقيقي: الموقع هو المفتاح
-        function lockSecret() {
-            const secret = document.getElementById('secretInput').value;
-            if(!secret) return alert("اكتب شيئاً أولاً!");
-            
-            const key = savedLat + savedLon; // المفتاح هو إحداثياتك اللحظية
-            encryptedData = CryptoJS.AES.encrypt(secret, key).toString();
-            
-            document.getElementById('encryptedDisplay').innerText = "تم التشفير: " + encryptedData;
-            document.getElementById('secretInput').value = "";
-            alert("تم قفل السر جغرافياً بنجاح!");
-        }
+    // New update every 5 seconds
+    setInterval(addNews, 5000);
+</script>
 
-        // فك تشفير حقيقي: لن يعمل إلا في نفس النقطة
-        function unlockSecret() {
-            if(!encryptedData) return alert("لا يوجد بيانات مشفرة!");
-            
-            const key = savedLat + savedLon;
-            try {
-                const bytes = CryptoJS.AES.decrypt(encryptedData, key);
-                const originalText = bytes.toString(CryptoJS.enc.Utf8);
-                
-                if (originalText) {
-                    document.getElementById('result').innerText = "تم الفتح: " + originalText;
-                    document.getElementById('result').className = "success";
-                } else {
-                    throw new Error();
-                }
-            } catch (e) {
-                alert("فشل فك التشفير! أنت لست في الموقع الدقيق (الإحداثيات غير متطابقة).");
-            }
-        }
-
-        getLocation();
-    </script>
 </body>
 </html>
